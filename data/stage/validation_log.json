@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-05-12T15:27:14.372618",
+  "total_rows": 1912,
+  "total_cols": 151,
+  "warnings": [
+    "Q003: 1 inconsistências em VALOR_TOTAL",
+    "Q005: 19 outliers extremos detectados"
+  ],
+  "errors": [],
+  "metrics": {
+    "outliers_extremos": 19,
+    "sem_hidrometro": 1,
+    "missing_por_coluna": {
+      "SIT._LIG_AGUA": 15,
+      "SIT._LIG_ESGOTO": 36,
+      "NUMERO_HIDROMETRO": 82,
+      "TIPO_HIDROMETRO": 82,
+      "MARCA_HIDROMETRO": 82,
+      "CAPACIDADE_HIDROMETRO": 82,
+      "CLASSE_METROLOGICA": 82,
+      "DATA_INSTALACAO_HIDROMETRO": 82,
+      "CATEGORIA_PRINCIPAL": 17,
+      "VOLUME_LIDO": 83,
+      "VOLUME_REAL": 83,
+      "VOLUME_FATURADO": 83,
+      "VALOR_AGUA": 97,
+      "VALOR_ESGOTO": 97
+    }
+  }
+}

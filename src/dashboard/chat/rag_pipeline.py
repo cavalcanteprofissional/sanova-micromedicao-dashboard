@@ -9,8 +9,6 @@ import numpy as np
 import pandas as pd
 from dataclasses import dataclass
 
-HF_TOKEN = os.getenv("HF_TOKEN", "")
-
 EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 SYSTEM_PROMPT = """Voce e um assistente especializado em analise de sistemas comerciais
@@ -160,6 +158,7 @@ def build_rag_chain(llm, df: pd.DataFrame | None = None):
     Sem nenhuma dependencia langchain*.
     """
     from dashboard.chat.knowledge_base import KNOWLEDGE_BASE_DOCS, generate_dynamic_stats
+    from dashboard.chat.llm_config import get_api_key
 
     docs = list(KNOWLEDGE_BASE_DOCS)
 
@@ -175,7 +174,8 @@ def build_rag_chain(llm, df: pd.DataFrame | None = None):
             if part.strip():
                 all_chunks.append(TextChunk(page_content=part.strip()))
 
-    embeddings = SimpleEmbeddings(model=EMBEDDING_MODEL, token=HF_TOKEN)
+    token = get_api_key() or ""
+    embeddings = SimpleEmbeddings(model=EMBEDDING_MODEL, token=token)
     vectorstore = SimpleVectorStore(all_chunks, embeddings)
 
     return SimpleConversationalRAG(llm, vectorstore)

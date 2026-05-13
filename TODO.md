@@ -712,4 +712,24 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env.lo
 
 ---
 
+## 12.16 Unificar entry point — path fixo em main.py (Fechado ✅ 13/05/2026)
+
+**Problema:** `main.py` tinha path condicional:
+```python
+if not os.environ.get('VIRTUAL_ENV'):
+    sys.path.insert(0, ...)
+```
+Isso funcionava no Streamlit Cloud (sem VIRTUAL_ENV), mas falhava local quando executado via `poetry run` (com VIRTUAL_ENV).
+
+**Solução:** Remover a condicional — sempre adicionar o caminho correto:
+```python
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+```
+
+**Arquivo alterado:** `src/dashboard/main.py`
+
+**Testes:** Streamlit inicia corretamente (testado via curl localhost:8501).
+
+---
+
 *Documento atualizado em 13/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG (zero deps langchain)*

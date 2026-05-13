@@ -170,7 +170,7 @@ Assistente de perguntas em linguagem natural sobre os dados de micromedicao. Int
 ```mermaid
 flowchart TD
     Q["Pergunta do usuario\n(em PT-BR)"]
-        --> EMB["Embedding\nsentence-transformers\nparaphrase-multilingual-MiniLM"]
+        --> EMB["Embedding\nHuggingFace Inference API\nparaphrase-multilingual-MiniLM"]
         --> VEC["InMemoryVectorStore\n(top-4 chunks)"]
         --> LLM["meta-llama/Llama-3.1-8B\nHuggingFace Inference\nProviders (gratuito)"]
         --> A["Resposta\n+ Memoria (k=5)"]
@@ -246,7 +246,7 @@ flowchart LR
 | **Framework** | Python 3.10+ · Streamlit |
 | **Dados** | Pandas · NumPy · Plotly |
 | **IA / LLM** | LangChain · HuggingFace Inference Providers · Llama-3.1-8B-Instruct |
-| **Embeddings** | sentence-transformers · `paraphrase-multilingual-MiniLM-L12-v2` |
+| **Embeddings** | HuggingFace Inference API · `paraphrase-multilingual-MiniLM-L12-v2` (384 dims) |
 | **Vector Store** | InMemoryVectorStore (langchain-community) |
 | **Gestão** | Poetry · Pytest (34 testes) |
 

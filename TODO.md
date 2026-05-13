@@ -568,4 +568,25 @@ Unable to find installation candidates for faiss-cpu (1.11.0.post1)
 - `tabs/chat.py`: ajustado call `chain.invoke(user_input)` (string direta em vez de dict)
 - **34/34 testes passando** após as mudanças
 
+---
+
+## 12.7 Deploy no Streamlit Cloud — sentence-transformers / torch (Fechado ✅ 12/05/2026)
+
+**Problema:** Mesmo após remover `faiss-cpu`, o `sentence-transformers` (usado por `HuggingFaceEmbeddings`) tem dependência pesada de `torch` → `triton` → `cffi`. O `cffi` precisa compilar extensão C nativa (`ffi.h`), mas o Streamlit Cloud não tem compilador gcc nem wheels para Python 3.14. Erro:
+
+```
+Unable to find installation candidates for torch (2.7.1)
+fatal error: ffi.h: No such file or directory
+```
+
+**Solução:** Substituir `HuggingFaceEmbeddings` (local, requer `sentence-transformers`+`torch`) por **classe customizada `HuggingFaceInferenceEmbeddings`** usando `InferenceClient.feature_extraction()` — puro HTTP, zero dependências nativas.
+
+**Mudanças:**
+- `rag_pipeline.py`: nova classe `HuggingFaceInferenceEmbeddings(Embeddings)` usando `huggingface_hub.InferenceClient.feature_extraction()`
+- `pyproject.toml`: removido `sentence-transformers`; `huggingface_hub` já estava instalado
+- `poetry.lock`: regenerado — `torch`/`triton`/`sentence-transformers` completamente fora
+- Bug corrigido: `invoke(question)` → `invoke(question_input)` na classe `SimpleConversationalRAG`
+
+**Custo:** ~$0/mês — HuggingFace Inference API tem rate limit gratuito para feature extraction.
+
 *Documento atualizado em 12/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG*

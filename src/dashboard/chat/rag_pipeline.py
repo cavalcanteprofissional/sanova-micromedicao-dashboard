@@ -1,18 +1,42 @@
 """
 Pipeline RAG: Constroi o chain de busca e geracao de respostas
-usando LangChain Core + InMemoryVectorStore + HuggingFace embeddings.
+usando LangChain Core + InMemoryVectorStore + HuggingFace Inference API embeddings.
 """
 
+import os
 import pandas as pd
+from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.runnables import RunnableSequence
+from langchain_core.embeddings import Embeddings
 from langchain_community.vectorstores import InMemoryVectorStore
-from langchain_huggingface import HuggingFaceEmbeddings
 
 EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env.local"))
+HF_TOKEN = os.getenv("HF_TOKEN", "")
+
+
+class HuggingFaceInferenceEmbeddings(Embeddings):
+    """Embeddings via HuggingFace Inference API — sem torch, sem sentence-transformers."""
+
+    def __init__(self, model: str, token: str = ""):
+        from huggingface_hub import InferenceClient
+        self.model = model
+        self.client = InferenceClient(token=token) if token else InferenceClient()
+
+    def embed_query(self, text: str) -> list:
+        result = self.client.feature_extraction(text, model=self.model)
+        if hasattr(result, "tolist"):
+            return result.tolist()
+        return list(result)
+
+    def embed_documents(self, texts: list) -> list:
+        return [self.embed_query(t) for t in texts]
+
 
 SYSTEM_PROMPT = """Voce e um assistente especializado em analise de sistemas comerciais
 de saneamento, com foco em micromedicao, deteccao de perdas comerciais e gestao de receita.
@@ -58,8 +82,6 @@ class SimpleConversationalRAG:
         return "\n".join(lines)
 
     def _build_chain(self):
-        inputs = RunnablePassthrough()
-
         def format_inputs(question):
             docs = self._retriever.invoke(question)
             context = "\n\n".join(doc.page_content for doc in docs)
@@ -82,9 +104,9 @@ class SimpleConversationalRAG:
         )
         return chain
 
-    def invoke(self, question_input) -> dict:
-        answer = self._chain.invoke(question)
-        self._chat_history.append(HumanMessage(content=question))
+    def invoke(self, question_input: str) -> dict:
+        answer = self._chain.invoke(question_input)
+        self._chat_history.append(HumanMessage(content=question_input))
         self._chat_history.append(AIMessage(content=answer))
         return {"answer": answer}
 
@@ -121,10 +143,9 @@ def build_rag_chain(llm, df: pd.DataFrame | None = None):
     )
     chunks = splitter.create_documents(docs)
 
-    embeddings = HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL,
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True}
+    embeddings = HuggingFaceInferenceEmbeddings(
+        model=EMBEDDING_MODEL,
+        token=HF_TOKEN
     )
 
     vectorstore = InMemoryVectorStore.from_documents(chunks, embeddings)

@@ -57,7 +57,7 @@ flowchart TD
 
     subgraph CHATBOT["Chatbot IA (sob demanda)"]
         J["knowledge_base.py\nChunks estaticos + dinamicos"]
-        K["rag_pipeline.py\nFAISS + Embeddings + Memory"]
+        K["rag_pipeline.py\nInMemoryVector + Embeddings + Memory"]
         L["llm_config.py\nHuggingFace Inference Providers"]
     end
 
@@ -116,7 +116,7 @@ dashboard-sanova/
 │   │   ├── utils.py             # Helpers
 │   │   ├── chat/                # Chatbot IA
 │   │   │   ├── llm_config.py    # HuggingFace LLM
-│   │   │   ├── rag_pipeline.py  # FAISS + embeddings
+│   │   │   ├── rag_pipeline.py  # InMemoryVector + embeddings
 │   │   │   └── knowledge_base.py # Base de conhecimento
 │   │   └── tabs/
 │   │       ├── overview.py       # KPIs + IQD
@@ -171,16 +171,16 @@ Assistente de perguntas em linguagem natural sobre os dados de micromedicao. Int
 flowchart TD
     Q["Pergunta do usuario\n(em PT-BR)"]
         --> EMB["Embedding\nsentence-transformers\nparaphrase-multilingual-MiniLM"]
-        --> FAISS["FAISS\nVector Store Local\n(top-4 chunks)"]
+        --> VEC["InMemoryVectorStore\n(top-4 chunks)"]
         --> LLM["meta-llama/Llama-3.1-8B\nHuggingFace Inference\nProviders (gratuito)"]
         --> A["Resposta\n+ Memoria (k=5)"]
 
-    KB1["Camada Estatica\nknowledge_base.py\n10 chunks tematicos"] --> FAISS
-    KB2["Camada Dinamica\ngenerate_dynamic_stats(df)\nestatisticas reais"] --> FAISS
+    KB1["Camada Estatica\nknowledge_base.py\n10 chunks tematicos"] --> VEC
+    KB2["Camada Dinamica\ngenerate_dynamic_stats(df)\nestatisticas reais"] --> VEC
 
     style Q fill:#2980B9,color:#fff
     style EMB fill:#16213e,color:#eee
-    style FAISS fill:#16213e,color:#eee
+    style VEC fill:#16213e,color:#eee
     style LLM fill:#27AE60,color:#fff
     style A fill:#1a1a2e,color:#eee
     style KB1,KB2 fill:#0f3460,color:#eee
@@ -241,12 +241,14 @@ flowchart LR
 
 ## Stack Tecnologica
 
-```
-Python 3.10+  |  Streamlit  |  Pandas  |  Plotly
-Poetry  |  Pytest (34 testes)
-LangChain  |  FAISS  |  sentence-transformers
-HuggingFace Inference Providers  |  Llama-3.1-8B-Instruct
-```
+| Camada | Tecnologia |
+|---|---|
+| **Framework** | Python 3.10+ · Streamlit |
+| **Dados** | Pandas · NumPy · Plotly |
+| **IA / LLM** | LangChain · HuggingFace Inference Providers · Llama-3.1-8B-Instruct |
+| **Embeddings** | sentence-transformers · `paraphrase-multilingual-MiniLM-L12-v2` |
+| **Vector Store** | InMemoryVectorStore (langchain-community) |
+| **Gestão** | Poetry · Pytest (34 testes) |
 
 ---
 

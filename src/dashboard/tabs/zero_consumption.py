@@ -6,7 +6,7 @@ from dashboard.utils import get_plotly_template, format_currency, format_currenc
 
 
 def render(df):
-    st.subheader("Consumo Zero — Analise de Perdas Comerciais")
+    st.subheader("Consumo Zero — Análise de Perdas Comerciais")
 
     zero_df = df[df['SIT._LIG_AGUA'] == 'ATIVA'].copy()
     vol_lido_cols = ['VOLUME_LIDO'] + [f'VOLUME_LIDO_{i:02d}' for i in range(1, 13)]
@@ -19,10 +19,10 @@ def render(df):
     col1, col2, col3 = st.columns(3)
     with col1:
         total_ativas = len(zero_df)
-        st.metric("Ligacoes Ativas", f"{total_ativas:,}")
+        st.metric("Ligações Ativas", f"{total_ativas:,}")
     with col2:
         com_zero = (zero_df['MESES_ZERO'] > 0).sum()
-        st.metric("Com Consumo Zero (ao menos 1 mes)", f"{com_zero:,}")
+        st.metric("Com Consumo Zero (ao menos 1 mês)", f"{com_zero:,}")
     with col3:
         receita_perdida = zero_df['MESES_ZERO'].sum() * TARIFA_MINIMA
         st.metric("Receita Potencial Perdida", format_currency(receita_perdida))
@@ -31,13 +31,13 @@ def render(df):
 
     col_g1, col_g2 = st.columns(2)
     with col_g1:
-        st.markdown("**Distribuicao de Meses com Consumo Zero**")
+        st.markdown("**Distribuição de Meses com Consumo Zero**")
         hist_data = zero_df['MESES_ZERO'].value_counts().sort_index().reset_index()
-        hist_data.columns = ['Meses Zero', 'Qtd Ligacoes']
+        hist_data.columns = ['Meses Zero', 'Qtd Ligações']
         fig_hist = px.bar(
-            hist_data, x='Meses Zero', y='Qtd Ligacoes',
+            hist_data, x='Meses Zero', y='Qtd Ligações',
             template=get_plotly_template(),
-            color='Qtd Ligacoes', color_continuous_scale='Reds'
+            color='Qtd Ligações', color_continuous_scale='Reds'
         )
         fig_hist.update_layout(showlegend=False, height=350)
         st.plotly_chart(fig_hist, width='stretch')
@@ -56,7 +56,7 @@ def render(df):
         st.plotly_chart(fig_cat, width='stretch')
 
     st.divider()
-    st.markdown("**Tabela: Ligacoes com >= 3 Meses de Consumo Zero**")
+    st.markdown("**Tabela: Ligações com ≥ 3 Meses de Consumo Zero**")
     criticos = zero_df[zero_df['MESES_ZERO'] >= 3][
         ['MATRICULA', 'CATEGORIA_PRINCIPAL', 'MESES_ZERO', 'VOLUME_LIDO', 'VOLUME_FATURADO']
     ].sort_values('MESES_ZERO', ascending=False)
@@ -64,12 +64,12 @@ def render(df):
     criticos = criticos.copy()
     criticos['Receita_Perdida_Estimada'] = criticos['MESES_ZERO'] * TARIFA_MINIMA
     if len(criticos) > 50:
-        page = st.number_input("Pagina", 1, max(1, (len(criticos) - 1) // 50 + 1), 1, key="zero_page")
+        page = st.number_input("Página", 1, max(1, (len(criticos) - 1) // 50 + 1), 1, key="zero_page")
         start = (page - 1) * 50
         criticos_page = criticos.iloc[start:start + 50]
     else:
         criticos_page = criticos
     st.dataframe(criticos_page, width='stretch', height=400)
 
-    st.markdown(f"**Total de ligacoes criticas (>= 3 meses zero):** {len(criticos):,}")
-    st.markdown(f"**Receita perdida estimada (casos criticos):** {format_currency(criticos['Receita_Perdida_Estimada'].sum())}")
+    st.markdown(f"**Total de ligações críticas (≥ 3 meses zero):** {len(criticos):,}")
+    st.markdown(f"**Receita perdida estimada (casos críticos):** {format_currency(criticos['Receita_Perdida_Estimada'].sum())}")

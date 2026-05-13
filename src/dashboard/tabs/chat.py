@@ -106,7 +106,7 @@ def _handle_message(user_input: str, df: pd.DataFrame):
     with st.chat_message("assistant"):
         with st.spinner("Consultando a base de conhecimento..."):
             try:
-                result = chain.invoke({"question": user_input})
+                result = chain.invoke(user_input)
                 answer = result["answer"]
             except Exception as e:
                 answer = f"Erro ao processar a pergunta: {e}"

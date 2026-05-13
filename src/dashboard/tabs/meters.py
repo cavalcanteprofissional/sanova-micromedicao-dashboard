@@ -6,19 +6,19 @@ from dashboard.utils import get_plotly_template, format_currency
 
 
 def render(df):
-    st.subheader("Analise de Hidrometros")
+    st.subheader("Análise de Hidrômetros")
 
     col1, col2, col3 = st.columns(3)
     with col1:
         total = len(df[df['NUMERO_HIDROMETRO'].notna()])
-        st.metric("Total de Hidrometros", f"{total:,}")
+        st.metric("Total de Hidrômetros", f"{total:,}")
     with col2:
         velhos = (df['IDADE_HIDRO_ANOS'].fillna(0) > IDADE_HIDRO_CRITICA).sum()
         pct = velhos/total*100 if total > 0 else 0
         st.metric(f"Candidatos Substit. (> {IDADE_HIDRO_CRITICA} anos)", f"{velhos:,}", delta=f"{pct:.1f}%")
     with col3:
         media_idade = df['IDADE_HIDRO_ANOS'].mean()
-        st.metric("Idade Media (anos)", f"{media_idade:.1f}")
+        st.metric("Idade Média (anos)", f"{media_idade:.1f}")
 
     st.divider()
 
@@ -76,7 +76,7 @@ def render(df):
         st.plotly_chart(fig_hist, width='stretch')
 
     st.divider()
-    st.markdown(f"**Tabela: Hidrometros Candidatos a Substituicao (> {IDADE_HIDRO_CRITICA} anos)**")
+    st.markdown(f"**Tabela: Hidrômetros Candidatos a Substituição (> {IDADE_HIDRO_CRITICA} anos)**")
 
     substituicao = df[df['IDADE_HIDRO_ANOS'] > IDADE_HIDRO_CRITICA].copy()
     substituicao['Receita_Potencial_Submed'] = (
@@ -88,7 +88,7 @@ def render(df):
     ].sort_values('IDADE_HIDRO_ANOS', ascending=False)
 
     if len(sub_table) > 50:
-        page = st.number_input("Pagina", 1, max(1, (len(sub_table) - 1) // 50 + 1), 1, key="meters_page")
+        page = st.number_input("Página", 1, max(1, (len(sub_table) - 1) // 50 + 1), 1, key="meters_page")
         start = (page - 1) * 50
         sub_table_page = sub_table.iloc[start:start + 50]
     else:
@@ -96,5 +96,5 @@ def render(df):
     st.dataframe(sub_table_page, width='stretch', height=400)
 
     total_receita_submed = sub_table['Receita_Potencial_Submed'].sum()
-    st.markdown(f"**Total de hidrometros para substituicao:** {len(sub_table):,}")
-    st.markdown(f"**Receita potencial por submedição (15% x 12m):** {format_currency(total_receita_submed)}")
+    st.markdown(f"**Total de hidrômetros para substituição:** {len(sub_table):,}")
+    st.markdown(f"**Receita potencial por submedição (15% × 12m):** {format_currency(total_receita_submed)}")

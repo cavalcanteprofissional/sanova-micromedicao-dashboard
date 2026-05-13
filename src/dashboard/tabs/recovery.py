@@ -14,13 +14,13 @@ def _color_priority(val):
 
 
 def render(df):
-    st.subheader("Recuperacao de Receita - Painel de Priorizacao")
+    st.subheader("Recuperação de Receita — Painel de Priorização")
 
     acoes = []
 
     sem_hidro_ativas = df[df.get('FLAG_SEM_HIDROMETRO', pd.Series([False]*len(df))) == True]
     acoes.append({
-        'Acao': 'Instalar hidrometro em ligacoes ativas',
+        'Acao': 'Instalar hidrometro em ligações ativas',
         'Qtd_Ligacoes': len(sem_hidro_ativas),
         'Receita_Potencial_12m': len(sem_hidro_ativas) * TARIFA_MINIMA * 12,
         'Prioridade': 'Alta'
@@ -29,7 +29,7 @@ def render(df):
     anomalias = df[df.get('FLAG_ANOMALIA_LEITURA', pd.Series([False]*len(df))) == True]
     receita_anomalia = anomalias['DIVERGENCIA_VOL'].abs().sum() * CUSTO_UNITARIO_AGUA
     acoes.append({
-        'Acao': 'Fiscalizar ligacoes com divergencia lido x real',
+        'Acao': 'Fiscalizar ligações com divergência lido × real',
         'Qtd_Ligacoes': len(anomalias),
         'Receita_Potencial_12m': receita_anomalia * 12,
         'Prioridade': 'Alta'
@@ -37,10 +37,10 @@ def render(df):
 
     zero_cronico = df[df.get('MESES_CONSUMO_ZERO', pd.Series([0]*len(df))) >= 6]
     acoes.append({
-        'Acao': 'Vistoriar/reativar ligacoes c/ 6+ meses sem consumo',
+        'Acao': 'Vistoriar/reativar ligações c/ 6+ meses sem consumo',
         'Qtd_Ligacoes': len(zero_cronico),
         'Receita_Potencial_12m': len(zero_cronico) * TARIFA_MINIMA * 6,
-        'Prioridade': 'Media'
+        'Prioridade': 'Média'
     })
 
     substituicao = df[df.get('IDADE_HIDRO_ANOS', pd.Series([0]*len(df))) > IDADE_HIDRO_CRITICA].copy()
@@ -52,7 +52,7 @@ def render(df):
         'Acao': 'Substituir hidrometros com > 5 anos (submedição)',
         'Qtd_Ligacoes': len(substituicao),
         'Receita_Potencial_12m': receita_sub,
-        'Prioridade': 'Media'
+        'Prioridade': 'Média'
     })
 
     acoes_df = pd.DataFrame(acoes).sort_values('Receita_Potencial_12m', ascending=False)
@@ -71,7 +71,7 @@ def render(df):
 
     st.divider()
 
-    st.markdown("**Tabela de Acoes Priorizadas**")
+    st.markdown("**Tabela de Ações Priorizadas**")
     display_df = acoes_df.copy()
     display_df['Receita_Potencial_12m_fmt'] = display_df['Receita_Potencial_12m'].apply(format_currency)
     styled = display_df[['Acao', 'Qtd_Ligacoes', 'Receita_Potencial_12m_fmt', 'Prioridade']].style.map(
@@ -80,7 +80,7 @@ def render(df):
     st.dataframe(styled, width='stretch', hide_index=True)
 
     st.divider()
-    st.markdown("**Waterfall - Recuperacao Potencial por Acao**")
+    st.markdown("**Waterfall — Recuperação Potencial por Ação**")
 
     labels = ['Faturamento Atual'] + [a['Acao'].split('(')[0].strip()[:25] for a in acoes] + ['Total Recuperacao']
     values = [faturamento_12m] + [-a['Receita_Potencial_12m'] for a in acoes] + [-total_receita]
@@ -104,7 +104,7 @@ def render(df):
     st.plotly_chart(fig_waterfall, width='stretch')
 
     st.divider()
-    st.markdown("**Gauge - Potencial de Recuperacao vs Faturamento Atual**")
+    st.markdown("**Gauge — Potencial de Recuperação vs Faturamento Atual**")
 
     fig_gauge = go.Figure(go.Indicator(
         mode="gauge+number+delta",

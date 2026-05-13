@@ -6,7 +6,7 @@ from dashboard.utils import get_plotly_template, format_currency
 
 
 def render(df):
-    st.subheader("Deteccao de Anomalias & Fraudes")
+    st.subheader("Detecção de Anomalias & Fraudes")
 
     anom_mask = (
         df.get('FLAG_ANOMALIA_LEITURA', pd.Series([False]*len(df))) |
@@ -29,7 +29,7 @@ def render(df):
 
     col_t1, col_t2 = st.columns(2)
     with col_t1:
-        st.markdown("**Scatter: Volume Lido x Volume Real**")
+        st.markdown("**Dispersão: Volume Lido × Volume Real**")
         zoom = st.checkbox("Sem outliers (>P95)", value=True, key="scatter_zoom")
         scatter_df = df[df['VOLUME_LIDO'].notna() & df['VOLUME_REAL'].notna()].copy()
         if zoom:
@@ -50,16 +50,16 @@ def render(df):
         fig_scatter.update_layout(height=350)
         st.plotly_chart(fig_scatter, width='stretch')
         if zoom:
-            st.caption(f"Mostrando registros ate P95 ({p95:.0f} m3). Desmarque para ver todos.")
+            st.caption(f"Mostrando registros até P95 ({p95:.0f} m³). Desmarque para ver todos.")
 
     with col_t2:
         st.markdown("**Contagem por Tipo de Anomalia**")
         tipo_data = {
             'Tipo': [
-                'Anomalia Leitura (LIDO > REAL)',
-                'Sem Hidrometro (Ativa)',
+                'Anomalia de Leitura (LIDO > REAL)',
+                'Sem Hidrômetro (Ativa)',
                 'Outlier Extremo',
-                'Consumo Implausivel'
+                'Consumo Implausível'
             ],
             'Qtd': [
                 int(df.get('FLAG_ANOMALIA_LEITURA', pd.Series([False]*len(df))).sum()),
@@ -82,18 +82,18 @@ def render(df):
         st.plotly_chart(fig_bar, width='stretch')
 
     st.divider()
-    st.markdown("**Tabela de Casos Prioritarios**")
+    st.markdown("**Tabela de Casos Prioritários**")
     display_cols = [c for c in ['MATRICULA', 'CATEGORIA_PRINCIPAL', 'SIT._LIG_AGUA',
                                  'VOLUME_LIDO', 'VOLUME_REAL', 'DIVERGENCIA_VOL',
                                  'FLAG_ANOMALIA_LEITURA', 'FLAG_OUTLIER_EXTREMO', 'SCORE_PRIORIDADE']
                    if c in anom_df.columns]
     table_df = anom_df[display_cols].head(100).copy()
     col_config = {
-        "FLAG_ANOMALIA_LEITURA": st.column_config.CheckboxColumn("Anomalia Leitura"),
+        "FLAG_ANOMALIA_LEITURA": st.column_config.CheckboxColumn("Anomalia de Leitura"),
         "FLAG_OUTLIER_EXTREMO": st.column_config.CheckboxColumn("Outlier Extremo"),
     }
     if len(table_df) > 50:
-        page = st.number_input("Pagina", 1, max(1, (len(table_df) - 1) // 50 + 1), 1, key="anom_page")
+        page = st.number_input("Página", 1, max(1, (len(table_df) - 1) // 50 + 1), 1, key="anom_page")
         start = (page - 1) * 50
         table_df = table_df.iloc[start:start + 50]
     st.dataframe(table_df, width='stretch', height=400, column_config=col_config)

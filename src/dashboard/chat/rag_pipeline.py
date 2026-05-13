@@ -1,15 +1,16 @@
 """
 Pipeline RAG: Constroi o chain de busca e geracao de respostas
-usando LangChain + FAISS + HuggingFace embeddings.
+usando LangChain Core + InMemoryVectorStore + HuggingFace embeddings.
 """
 
 import pandas as pd
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.runnables import RunnableSequence
+from langchain_community.vectorstores import InMemoryVectorStore
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_classic.chains import ConversationalRetrievalChain
-from langchain_classic.memory import ConversationBufferWindowMemory
-from langchain_classic.prompts import PromptTemplate
 
 EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
@@ -36,16 +37,71 @@ PERGUNTA: {question}
 RESPOSTA:"""
 
 
+class SimpleConversationalRAG:
+    """RAG chain simples com historico de chat usando LangChain Core primitives."""
+
+    def __init__(self, llm, retriever):
+        self._llm = llm
+        self._retriever = retriever
+        self._chat_history: list = []
+        self._chain = self._build_chain()
+
+    def _format_chat_history(self, history: list) -> str:
+        if not history:
+            return "(sem historico)"
+        lines = []
+        for msg in history:
+            if isinstance(msg, HumanMessage):
+                lines.append(f"Usuario: {msg.content}")
+            elif isinstance(msg, AIMessage):
+                lines.append(f"Assistente: {msg.content}")
+        return "\n".join(lines)
+
+    def _build_chain(self):
+        inputs = RunnablePassthrough()
+
+        def format_inputs(question):
+            docs = self._retriever.invoke(question)
+            context = "\n\n".join(doc.page_content for doc in docs)
+            return {
+                "question": question,
+                "context": context,
+                "chat_history": self._format_chat_history(self._chat_history),
+            }
+
+        prompt = PromptTemplate(
+            input_variables=["context", "chat_history", "question"],
+            template=SYSTEM_PROMPT
+        )
+
+        chain = RunnableSequence(
+            format_inputs,
+            prompt,
+            self._llm,
+            StrOutputParser()
+        )
+        return chain
+
+    def invoke(self, question_input) -> dict:
+        answer = self._chain.invoke(question)
+        self._chat_history.append(HumanMessage(content=question))
+        self._chat_history.append(AIMessage(content=answer))
+        return {"answer": answer}
+
+    def clear_history(self):
+        self._chat_history.clear()
+
+
 def build_rag_chain(llm, df: pd.DataFrame | None = None):
     """
-    Constroi e retorna um ConversationalRetrievalChain com RAG.
+    Constroi e retorna um SimpleConversationalRAG com RAG.
 
     Args:
-        llm: Instancia configurada do ChatHuggingFace (ou outro LLM compativel).
+        llm: Instancia configurada do ChatHuggingFace.
         df: DataFrame opcional com os dados para estatisticas dinamicas.
 
     Returns:
-        ConversationalRetrievalChain pronto para uso.
+        SimpleConversationalRAG pronto para uso.
     """
     from dashboard.chat.knowledge_base import KNOWLEDGE_BASE_DOCS, generate_dynamic_stats
 
@@ -55,6 +111,8 @@ def build_rag_chain(llm, df: pd.DataFrame | None = None):
         dynamic_stats = generate_dynamic_stats(df)
         if dynamic_stats:
             docs.append(dynamic_stats)
+
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
@@ -69,30 +127,10 @@ def build_rag_chain(llm, df: pd.DataFrame | None = None):
         encode_kwargs={"normalize_embeddings": True}
     )
 
-    vectorstore = FAISS.from_documents(chunks, embeddings)
+    vectorstore = InMemoryVectorStore.from_documents(chunks, embeddings)
     retriever = vectorstore.as_retriever(
         search_type="similarity",
         search_kwargs={"k": 4}
     )
 
-    memory = ConversationBufferWindowMemory(
-        k=5,
-        memory_key="chat_history",
-        return_messages=True,
-        output_key="answer"
-    )
-
-    prompt = PromptTemplate(
-        input_variables=["context", "chat_history", "question"],
-        template=SYSTEM_PROMPT
-    )
-
-    chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=retriever,
-        memory=memory,
-        combine_docs_chain_kwargs={"prompt": prompt},
-        return_source_documents=True,
-        verbose=False
-    )
-    return chain
+    return SimpleConversationalRAG(llm, retriever)

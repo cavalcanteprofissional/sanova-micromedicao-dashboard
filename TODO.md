@@ -541,4 +541,31 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '..'
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env.local'))
 ```
 
+---
+
+## 12.6 Deploy no Streamlit Cloud — FAISS CPU (Fechado ✅ 12/05/2026)
+
+**Problema:** `faiss-cpu` não possui wheels compatíveis com o ambiente do Streamlit Cloud (ABI tags não suportados). Erro:
+
+```
+Unable to find installation candidates for faiss-cpu (1.11.0.post1)
+```
+
+**Solução:** Substituir FAISS por `InMemoryVectorStore` (puro Python, sem C extensions):
+
+| Antes | Depois |
+|---|---|
+| `from langchain_community.vectorstores import FAISS` | `from langchain_community.vectorstores import InMemoryVectorStore` |
+| `FAISS.from_documents(chunks, embeddings)` | `InMemoryVectorStore.from_documents(chunks, embeddings)` |
+| `faiss-cpu >= 1.8.0` em `pyproject.toml` | Removido |
+
+`InMemoryVectorStore` está em `langchain-community` (já instalado) e funciona em qualquer ambiente. A busca vetorial é em memória — sem impacto para bases pequenas (~10 chunks no RAG).
+
+**Mudanças:**
+- `rag_pipeline.py`: `FAISS` → `InMemoryVectorStore`; reescrito o chain de `ConversationalRetrievalChain` para `SimpleConversationalRAG` usando apenas `langchain_core` primitives (sem `langchain_classic` no código)
+- `pyproject.toml`: removido `faiss-cpu`; `langchain-classic` e `langchain-text-splitters` removidos como deps diretos (são transitive de `langchain-huggingface` e `langchain`)
+- `poetry.lock`: regenerado com `poetry lock --no-cache --regenerate`
+- `tabs/chat.py`: ajustado call `chain.invoke(user_input)` (string direta em vez de dict)
+- **34/34 testes passando** após as mudanças
+
 *Documento atualizado em 12/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG*

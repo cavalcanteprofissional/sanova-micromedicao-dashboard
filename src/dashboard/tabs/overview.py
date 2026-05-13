@@ -17,18 +17,18 @@ def render(df, qm=None):
 
     iqd = qm['iqd'] if qm else 88.4
 
-    st.markdown("### KPIs Executivos")
+    st.markdown("### Métricas Chave (KPIs)")
 
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
-        st.metric("💧 Ligacoes Ativas", f"{ativas:,}")
+        st.metric("💧 Ligações Ativas", f"{ativas:,}")
     with col2:
         st.metric("💰 Faturamento Atual", f"R$ {receita:,.2f}", delta_color="normal")
     with col3:
         st.metric("📊 Volume Faturado", f"{vol_total:,.0f} m³", delta_color="normal")
     with col4:
         cor_delta = "inverse" if anomalias > 0 else "normal"
-        st.metric("🚨 Casos Criticos", f"{anomalias}", delta="Verificar" if anomalias > 0 else "Normal", delta_color=cor_delta)
+        st.metric("🚨 Casos Críticos", f"{anomalias}", delta="Verificar" if anomalias > 0 else "Normal", delta_color=cor_delta)
     with col5:
         cor_iqd = "normal" if iqd >= 90 else ("off" if iqd >= 70 else "inverse")
         st.metric("📋 IQD", f"{iqd}%", delta_color=cor_iqd)
@@ -37,7 +37,7 @@ def render(df, qm=None):
 
     col_g1, col_g2 = st.columns(2)
     with col_g1:
-        st.markdown("**Distribuicao por Categoria**")
+        st.markdown("**Distribuição por Categoria**")
         cat_counts = df['CATEGORIA_PRINCIPAL'].value_counts().reset_index()
         cat_counts.columns = ['Categoria', 'Quantidade']
         fig_pie = px.pie(
@@ -52,7 +52,7 @@ def render(df, qm=None):
         st.plotly_chart(fig_pie, width='stretch')
 
     with col_g2:
-        st.markdown("**Distribuicao por Situacao da Ligacao**")
+        st.markdown("**Distribuição por Situação da Ligação**")
         situacao_counts = df['SIT._LIG_AGUA'].value_counts().reset_index()
         situacao_counts.columns = ['Situacao', 'Quantidade']
 
@@ -76,7 +76,7 @@ def render(df, qm=None):
         fig_bar.update_layout(showlegend=False, yaxis={'autorange': 'reversed'}, margin=dict(t=20))
         st.plotly_chart(fig_bar, width='stretch')
 
-    st.markdown("**Evolucao do Faturamento (13 meses)**")
+    st.markdown("**Evolução do Faturamento (13 meses)**")
     meses = [''] + [f'_{i:02d}' for i in range(1, 13)]
     meses_labels = get_month_labels()
 
@@ -100,7 +100,7 @@ def render(df, qm=None):
     )
     st.plotly_chart(fig_line, width='stretch')
 
-    st.markdown("**Consumo Medio por Categoria x Mes** *(volume faturado medio em m3)*")
+    st.markdown("**Consumo Médio por Categoria × Mês** *(volume faturado médio em m³)*")
     cat_mes_data = []
     for cat in df['CATEGORIA_PRINCIPAL'].unique():
         subset = df[df['CATEGORIA_PRINCIPAL'] == cat]
@@ -120,7 +120,7 @@ def render(df, qm=None):
         colorscale='Blues',
         text=pivot_df.values,
         texttemplate='%{text:.0f}',
-        hovertemplate='Categoria: %{y}<br>Mes: %{x}<br>Media: %{text:.1f} m3<extra></extra>'
+        hovertemplate='Categoria: %{y}<br>Mês: %{x}<br>Média: %{text:.1f} m³<extra></extra>'
     ))
     fig_heat.update_layout(height=300, template=get_plotly_template(), margin=dict(t=20))
     st.plotly_chart(fig_heat, width='stretch')

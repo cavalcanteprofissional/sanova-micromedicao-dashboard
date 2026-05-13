@@ -8,7 +8,7 @@ from dashboard.load_data import get_month_labels
 
 
 def render(df, qm=None):
-    st.subheader("Qualidade de Dados — Analise de Integridade")
+    st.subheader("Qualidade de Dados — Análise de Integridade")
 
     if qm is None:
         total = len(df)
@@ -39,7 +39,7 @@ def render(df, qm=None):
 
     col_g1, col_g2 = st.columns(2)
     with col_g1:
-        st.markdown("**Evolucao do Missing ao Longo do Tempo (VOLUME_LIDO)**")
+        st.markdown("**Evolução do Missing ao Longo do Tempo (VOLUME_LIDO)**")
         meses = [''] + [f'_{i:02d}' for i in range(1, 13)]
         meses_labels = get_month_labels()
 
@@ -61,7 +61,7 @@ def render(df, qm=None):
         st.plotly_chart(fig_line, width='stretch')
 
     with col_g2:
-        st.markdown("**Heatmap de Missing por Coluna × Mes**")
+        st.markdown("**Heatmap de Missing por Coluna × Mês**")
         cols_to_check = [
             'VOLUME_LIDO', 'VOLUME_REAL', 'VOLUME_FATURADO',
             'VALOR_AGUA', 'VALOR_ESGOTO', 'VALOR_TOTAL'
@@ -86,7 +86,7 @@ def render(df, qm=None):
             colorscale='Reds',
             text=pivot_heat.values,
             texttemplate="%{text:.1f}%",
-            hovertemplate='Coluna: %{y}<br>Mes: %{x}<br>Missing: %{z:.1f}%<extra></extra>'
+            hovertemplate='Coluna: %{y}<br>Mês: %{x}<br>Missing: %{z:.1f}%<extra></extra>'
         ))
         fig_heat.update_layout(height=300, template=get_plotly_template())
         st.plotly_chart(fig_heat, width='stretch')
@@ -97,15 +97,15 @@ def render(df, qm=None):
     with col_t1:
         st.markdown("**Inconsistencias Detectadas**")
         inc_df = pd.DataFrame([
-            {'Tipo': 'LIDO > REAL (>1m3)', 'Qtd': int((df['DIVERGENCIA_VOL'] < -1).sum()) if 'DIVERGENCIA_VOL' in df.columns else 0, 'Descricao': 'Possivel fraude/adulteracao'},
-            {'Tipo': 'Outlier Extremo (>P99)', 'Qtd': int(df['FLAG_OUTLIER_EXTREMO'].sum()) if 'FLAG_OUTLIER_EXTREMO' in df.columns else 0, 'Descricao': 'Volume > 500 m3 ou anomalico'},
-            {'Tipo': 'Ligacao Ativa sem Hidrometro', 'Qtd': int(df['FLAG_SEM_HIDROMETRO'].sum()) if 'FLAG_SEM_HIDROMETRO' in df.columns else 0, 'Descricao': 'Medicao sem equipamento'},
+            {'Tipo': 'LIDO > REAL (>1m³)', 'Qtd': int((df['DIVERGENCIA_VOL'] < -1).sum()) if 'DIVERGENCIA_VOL' in df.columns else 0, 'Descricao': 'Possível fraude/adulteração'},
+            {'Tipo': 'Outlier Extremo (>P99)', 'Qtd': int(df['FLAG_OUTLIER_EXTREMO'].sum()) if 'FLAG_OUTLIER_EXTREMO' in df.columns else 0, 'Descricao': 'Volume > 500 m³ ou anômalo'},
+            {'Tipo': 'Ligação Ativa sem Hidrômetro', 'Qtd': int(df['FLAG_SEM_HIDROMETRO'].sum()) if 'FLAG_SEM_HIDROMETRO' in df.columns else 0, 'Descricao': 'Medição sem equipamento'},
             {'Tipo': 'Dados Mensais Incompletos', 'Qtd': int((df['MESES_DADOS_AUSENTES'] > 0).sum()) if 'MESES_DADOS_AUSENTES' in df.columns else 0, 'Descricao': 'Meses sem leitura'},
         ])
         st.dataframe(inc_df, width='stretch', hide_index=True)
 
     with col_t2:
-        st.markdown("**Registros por Tipo de Inconsistencia**")
+        st.markdown("**Registros por Tipo de Inconsistência**")
         inc_counts = df[
             (df.get('FLAG_ANOMALIA_LEITURA', pd.Series([False]*len(df)))) |
             (df.get('FLAG_OUTLIER_EXTREMO', pd.Series([False]*len(df)))) |

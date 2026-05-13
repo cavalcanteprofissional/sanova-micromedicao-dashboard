@@ -253,6 +253,8 @@ flowchart LR
 
 ## Como Executar
 
+### Local (Poetry)
+
 ```bash
 # 1. Instalar dependencias
 poetry install
@@ -264,10 +266,27 @@ python src/etl/run_pipeline.py
 #   Veja secao "Chatbot IA Generativa com RAG" acima.
 
 # 4. Abrir dashboard
-python run.py
+poetry run streamlit run src/dashboard/main.py
 ```
 
 Dashboard disponible em `http://localhost:8501`.
+
+### Codespaces / Venv Externo
+
+```bash
+# Ativar ambiente virtual primeiro
+source .venv/bin/activate
+
+# Instalar deps (se necessario)
+pip install poetry
+poetry install
+
+# Executar
+streamlit run src/dashboard/main.py
+```
+
+> Se executar sem Poetry/venv ativo, o dashboard ajusta o `sys.path` automaticamente.
+> O `HF_TOKEN` deve estar em `.env.local` para uso local, ou nos Secrets do Streamlit Cloud para deploy.
 
 ---
 

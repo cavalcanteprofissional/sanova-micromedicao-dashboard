@@ -1,8 +1,8 @@
 import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+if not os.environ.get('VIRTUAL_ENV'):
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import streamlit as st
-import os
 from datetime import datetime
 from dashboard.load_data import load_data, get_month_labels, get_quality_metrics
 from dashboard.utils import apply_filters, render_methodology_expander

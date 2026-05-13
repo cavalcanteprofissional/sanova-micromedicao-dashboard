@@ -640,4 +640,34 @@ Isso coloca a raiz do projeto (`/mount/src/sanova-micromedicao-dashboard/`) no `
 - Main module path: `src/dashboard/main.py`
 - Entry point local: `run.py` (para execução via `python run.py`)
 
+---
+
+## 12.11 Codespaces — sys.path e Poetry venv (Fechado ✅ 13/05/2026)
+
+**Problema:** No Codespaces, o dashboard crashou com:
+
+```
+ModuleNotFoundError: No module named 'plotly'
+```
+
+Causa: `sys.path.insert(0, '..')` sempre ativo, causando caminho circular duplo (`dashboard/tabs/__init__.py` importava de `../dashboard/tabs/`).
+
+**Solução:** O `sys.path.insert` agora é condicional:
+```python
+if not os.environ.get('VIRTUAL_ENV'):
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+```
+
+Isso significa:
+- **Com Poetry/venv ativo**: `VIRTUAL_ENV` existe → não insere path → imports funcionam normalmente via Poetry
+- **Sem Poetry/venv** (Codespaces sem ambiente ativado, Streamlit Cloud): insere `src/` no path → `dashboard/` acessível
+
+**Comando correto no Codespaces:**
+```bash
+poetry run streamlit run src/dashboard/main.py
+# ou ativar venv primeiro:
+source .venv/bin/activate
+streamlit run src/dashboard/main.py
+```
+
 *Documento atualizado em 13/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG (zero deps langchain)*

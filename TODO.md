@@ -618,4 +618,26 @@ O Poetry interpreta isso como "empacotar subdiretório `src/dashboard/dashboard/
 - O `run.py` já adiciona `src/` ao `sys.path` diretamente
 - Nenhuma entry point Poetry é usada no Streamlit Cloud
 
+---
+
+## 12.10 Deploy no Streamlit Cloud — sys.path no main.py (Fechado ✅ 13/05/2026)
+
+**Problema:** O Streamlit Cloud executa `streamlit run src/dashboard/main.py` diretamente, sem wrapper. O `main.py` importa `from dashboard.load_data import ...` mas o `sys.path` no Streamlit Cloud não inclui `src/`, causando:
+
+```
+ModuleNotFoundError: No module named 'dashboard'
+```
+
+**Solução:** Adicionar no topo do `main.py`:
+```python
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+```
+
+Isso coloca a raiz do projeto (`/mount/src/sanova-micromedicao-dashboard/`) no `sys.path`, e `src/dashboard/` fica acessível como módulo `dashboard`.
+
+**Configuração do deploy:**
+- Main module path: `src/dashboard/main.py`
+- Entry point local: `run.py` (para execução via `python run.py`)
+
 *Documento atualizado em 13/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG (zero deps langchain)*

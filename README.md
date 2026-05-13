@@ -105,7 +105,6 @@ flowchart LR
 
 ```
 dashboard-sanova/
-├── run.py
 ├── pyproject.toml
 ├── .env.example / .env.local
 ├── src/

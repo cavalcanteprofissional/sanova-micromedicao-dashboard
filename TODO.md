@@ -570,23 +570,32 @@ Unable to find installation candidates for faiss-cpu (1.11.0.post1)
 
 ---
 
-## 12.7 Deploy no Streamlit Cloud — sentence-transformers / torch (Fechado ✅ 12/05/2026)
+## 12.8 Deploy no Streamlit Cloud — langchain-* (Fechado ✅ 13/05/2026)
 
-**Problema:** Mesmo após remover `faiss-cpu`, o `sentence-transformers` (usado por `HuggingFaceEmbeddings`) tem dependência pesada de `torch` → `triton` → `cffi`. O `cffi` precisa compilar extensão C nativa (`ffi.h`), mas o Streamlit Cloud não tem compilador gcc nem wheels para Python 3.14. Erro:
+**Problema:** Mesmo após remover `faiss-cpu` e `sentence-transformers`, uma terceira cascata de dependencias pesadas ainda causava falha no Streamlit Cloud:
 
 ```
-Unable to find installation candidates for torch (2.7.1)
-fatal error: ffi.h: No such file or directory
+langchain-huggingface (0.3.1) → langchain-core (0.3.x) → langchain (0.3.30)
+→ langsmith (0.3.45) → zstandard → cffi (build nativo → ffi.h: No such file)
 ```
 
-**Solução:** Substituir `HuggingFaceEmbeddings` (local, requer `sentence-transformers`+`torch`) por **classe customizada `HuggingFaceInferenceEmbeddings`** usando `InferenceClient.feature_extraction()` — puro HTTP, zero dependências nativas.
+Erro específico no lock: `cffi 1.17.0rc1` tentando compilar extensão C nativa em ambiente Python 3.14 sem compilador.
 
-**Mudanças:**
-- `rag_pipeline.py`: nova classe `HuggingFaceInferenceEmbeddings(Embeddings)` usando `huggingface_hub.InferenceClient.feature_extraction()`
-- `pyproject.toml`: removido `sentence-transformers`; `huggingface_hub` já estava instalado
-- `poetry.lock`: regenerado — `torch`/`triton`/`sentence-transformers` completamente fora
-- Bug corrigido: `invoke(question)` → `invoke(question_input)` na classe `SimpleConversationalRAG`
+**Solução:** Remover TODAS as dependencias `langchain-*` do `pyproject.toml`. O chatbot agora usa apenas `huggingface_hub` + `numpy` + plain Python.
 
-**Custo:** ~$0/mês — HuggingFace Inference API tem rate limit gratuito para feature extraction.
+| Componente | Antes (LangChain) | Depois (Custom) |
+|---|---|---|
+| LLM | `ChatHuggingFace` de `langchain-huggingface` | `HuggingFaceLLM` via `InferenceClient.chat_completion()` |
+| Embeddings | `HuggingFaceEmbeddings` (sentence-transformers) | `SimpleEmbeddings` via `InferenceClient.feature_extraction()` |
+| Vector Store | `InMemoryVectorStore` de `langchain-community` | `SimpleVectorStore` com cosseno similarity via numpy |
+| Text Splitting | `RecursiveCharacterTextSplitter` de `langchain-text-splitters` | `_simple_split()` — plain Python, 20 linhas |
+| Chain | `RunnableSequence` + `PromptTemplate` + `StrOutputParser` | Funções Python plain (build_rag_chain → string formatting) |
+| Messages | `HumanMessage` / `AIMessage` de `langchain_core.messages` | `UserMessage` / `AssistantMessage` dataclasses |
 
-*Documento atualizado em 12/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG*
+**Resultado:**
+- `pyproject.toml`: `streamlit`, `pandas`, `numpy`, `plotly`, `openpyxl`, `huggingface_hub`, `python-dotenv` — 7 deps apenas
+- `poetry.lock`: 69 packages únicos (antes: 126+)
+- `langchain`, `langchain-community`, `langchain-huggingface`, `langchain-text-splitters`, `langchain-classic`, `langsmith`, `zstandard`, `cffi`, `sentence-transformers`, `torch`, `triton`, `faiss-cpu` — **ZERO** no lock
+- **34/34 testes passando**
+
+*Documento atualizado em 13/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG (zero deps langchain)*

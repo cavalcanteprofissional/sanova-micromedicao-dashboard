@@ -57,7 +57,7 @@ flowchart TD
 
     subgraph CHATBOT["Chatbot IA (sob demanda)"]
         J["knowledge_base.py\nChunks estaticos + dinamicos"]
-        K["rag_pipeline.py\nInMemoryVector + Embeddings + Memory"]
+        K["rag_pipeline.py\nEmbeddings + RAG + Memory"]
         L["llm_config.py\nHuggingFace Inference Providers"]
     end
 
@@ -116,7 +116,7 @@ dashboard-sanova/
 │   │   ├── utils.py             # Helpers
 │   │   ├── chat/                # Chatbot IA
 │   │   │   ├── llm_config.py    # HuggingFace LLM
-│   │   │   ├── rag_pipeline.py  # InMemoryVector + embeddings
+│   │   │   ├── rag_pipeline.py  # Embeddings + RAG
 │   │   │   └── knowledge_base.py # Base de conhecimento
 │   │   └── tabs/
 │   │       ├── overview.py       # KPIs + IQD
@@ -171,8 +171,8 @@ Assistente de perguntas em linguagem natural sobre os dados de micromedicao. Int
 flowchart TD
     Q["Pergunta do usuario\n(em PT-BR)"]
         --> EMB["Embedding\nHuggingFace Inference API\nparaphrase-multilingual-MiniLM"]
-        --> VEC["InMemoryVectorStore\n(top-4 chunks)"]
-        --> LLM["meta-llama/Llama-3.1-8B\nHuggingFace Inference\nProviders (gratuito)"]
+        --> VEC["SimpleVectorStore\n(top-4 chunks, cosine similarity)"]
+        --> LLM["meta-llama/Llama-3.1-8B\nHuggingFace Inference API"]
         --> A["Resposta\n+ Memoria (k=5)"]
 
     KB1["Camada Estatica\nknowledge_base.py\n10 chunks tematicos"] --> VEC
@@ -245,9 +245,8 @@ flowchart LR
 |---|---|
 | **Framework** | Python 3.10+ · Streamlit |
 | **Dados** | Pandas · NumPy · Plotly |
-| **IA / LLM** | LangChain · HuggingFace Inference Providers · Llama-3.1-8B-Instruct |
+| **LLM / Chat** | HuggingFace Inference API · Llama-3.1-8B-Instruct |
 | **Embeddings** | HuggingFace Inference API · `paraphrase-multilingual-MiniLM-L12-v2` (384 dims) |
-| **Vector Store** | InMemoryVectorStore (langchain-community) |
 | **Gestão** | Poetry · Pytest (34 testes) |
 
 ---

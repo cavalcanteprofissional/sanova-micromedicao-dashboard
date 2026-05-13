@@ -682,4 +682,20 @@ Isso coloca a raiz do projeto (`/mount/src/sanova-micromedicao-dashboard/`) no `
 
 ---
 
+## 12.14 Chatbot — Bug no caminho do .env.local (Fechado ✅ 13/05/2026)
+
+**Problema:** Localmente o chatbot mostrava "Configure seu token da API HuggingFace..." mesmo com `.env.local` preenchido. Causa: path `'..', '..', '.env.local'` resolvia para `src/.env.local` (inexistente), não para a raiz do projeto.
+
+- `src/dashboard/chat` → `..` → `..` → `src/.env.local` → **não existe**
+- Deveria ser: `src/dashboard/chat` → `..` → `..` → `..` → `.env.local` → **existe**
+
+**Solução:** Adicionado `'..'` extra em `llm_config.py` linha 22:
+```python
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env.local')
+```
+
+**Testes:** 34/34 passando; `get_api_key()` agora retorna o token corretamente.
+
+---
+
 *Documento atualizado em 13/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG (zero deps langchain)*

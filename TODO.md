@@ -598,4 +598,24 @@ Erro específico no lock: `cffi 1.17.0rc1` tentando compilar extensão C nativa 
 - `langchain`, `langchain-community`, `langchain-huggingface`, `langchain-text-splitters`, `langchain-classic`, `langsmith`, `zstandard`, `cffi`, `sentence-transformers`, `torch`, `triton`, `faiss-cpu` — **ZERO** no lock
 - **34/34 testes passando**
 
+---
+
+## 12.9 Deploy no Streamlit Cloud — packages Poetry (Fechado ✅ 13/05/2026)
+
+**Problema:** O `pyproject.toml` tinha a configuração:
+```toml
+packages = [{include = "dashboard", from = "src/dashboard"}]
+```
+
+O Poetry interpreta isso como "empacotar subdiretório `src/dashboard/dashboard/`" (subpasta `dashboard` dentro de `dashboard`), mas o módulo real é `src/dashboard/__init__.py`. Erro:
+
+```
+/mount/src/sanova-micromedicao-dashboard/src/dashboard/dashboard does not contain any element
+```
+
+**Solução:** Remover a linha `packages` do `pyproject.toml`. Ela é desnecessária porque:
+- O dashboard é executado via `run.py`, não via `poetry run dashboard`
+- O `run.py` já adiciona `src/` ao `sys.path` diretamente
+- Nenhuma entry point Poetry é usada no Streamlit Cloud
+
 *Documento atualizado em 13/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG (zero deps langchain)*

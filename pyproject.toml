@@ -4,7 +4,6 @@ version = "1.0.0"
 description = "Dashboard Streamlit — Análise Comercial de Micromedição (SANOVA)"
 authors = ["SANOVA"]
 readme = "README.md"
-packages = [{include = "dashboard", from = "src/dashboard"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"

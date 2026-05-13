@@ -698,4 +698,18 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env.lo
 
 ---
 
+## 12.15 Chatbot — HF_TOKEN vazio no rag_pipeline.py (Fechado ✅ 13/05/2026)
+
+**Problema:** Chatbot mostrava "Configure seu token da API..." mesmo com `.env.local` configurado. Causa: `rag_pipeline.py` usava `HF_TOKEN = os.getenv("HF_TOKEN", "")` no topo do módulo — executado no import, sempre string vazia. A função `get_api_key()` do `llm_config.py` nunca era chamada.
+
+**Solução:**
+- Removido `HF_TOKEN = os.getenv("HF_TOKEN", "")` do topo do módulo `rag_pipeline.py`
+- Em `build_rag_chain()`: importar `get_api_key` de `llm_config.py` e usar `token = get_api_key() or ""` para passar aos embeddings
+
+**Arquivo alterado:** `src/dashboard/chat/rag_pipeline.py`
+
+**Testes:** 34/34 passando; imports OK.
+
+---
+
 *Documento atualizado em 13/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG (zero deps langchain)*

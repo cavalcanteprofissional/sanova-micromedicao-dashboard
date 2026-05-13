@@ -5,9 +5,6 @@ Implementacao via huggingface_hub.InferenceClient — sem langchain-huggingface.
 """
 
 import os
-from dotenv import load_dotenv
-
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env.local'))
 
 LLM_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
 MAX_NEW_TOKENS = 1024
@@ -15,14 +12,35 @@ TEMPERATURE = 0.1
 
 
 def get_api_key() -> str | None:
-    """Retorna o token da API HuggingFace, ou None se nao estiver configurado."""
-    return os.getenv("HF_TOKEN")
+    """Retorna o token — via env var (Streamlit Secrets) ou .env.local (local)."""
+    # Primeiro: variável de ambiente (Streamlit Secrets expõe como env var)
+    token = os.getenv("HF_TOKEN")
+    if token:
+        return token
+
+    # Segundo: carregar .env.local apenas se existir (ambiente local)
+    dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env.local')
+    if os.path.exists(dotenv_path):
+        from dotenv import load_dotenv
+        load_dotenv(dotenv_path=dotenv_path)
+        token = os.getenv("HF_TOKEN")
+        if token:
+            return token
+
+    # Terceiro: tentar st.secrets (Streamlit Cloud com TOML Secrets)
+    try:
+        import streamlit as st
+        return st.secrets.get("HF_TOKEN")
+    except Exception:
+        pass
+
+    return None
 
 
 def has_api_key() -> bool:
     """Verifica se o token da API HuggingFace esta configurado."""
     key = get_api_key()
-    return bool(key and key != "your_hf_token_here")
+    return bool(key and key.strip() and key != "your_hf_token_here")
 
 
 class HuggingFaceLLM:

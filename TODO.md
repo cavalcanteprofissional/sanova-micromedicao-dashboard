@@ -642,32 +642,44 @@ Isso coloca a raiz do projeto (`/mount/src/sanova-micromedicao-dashboard/`) no `
 
 ---
 
-## 12.11 Codespaces — sys.path e Poetry venv (Fechado ✅ 13/05/2026)
+## 12.12 Deploy no Streamlit Cloud — Sucesso (Fechado ✅ 13/05/2026)
 
-**Problema:** No Codespaces, o dashboard crashou com:
+**Status final:** Dashboard operacional no Streamlit Cloud.
 
-```
-ModuleNotFoundError: No module named 'plotly'
-```
+**Configuração:**
+- Main module path: `src/dashboard/main.py`
+- Poetry: `package-mode = false` (gerencia apenas deps)
+- `HF_TOKEN` nos Secrets do Streamlit Cloud
 
-Causa: `sys.path.insert(0, '..')` sempre ativo, causando caminho circular duplo (`dashboard/tabs/__init__.py` importava de `../dashboard/tabs/`).
+**Problemas resolvidos em ordem:**
+1. `faiss-cpu` sem wheels → `InMemoryVectorStore` custom
+2. `sentence-transformers` → `torch` → `cffi` → compilação nativa → HuggingFace Inference API
+3. `langchain-*` transitive deps (`langsmith` → `zstandard` → `cffi`) → removidos todos, `huggingface_hub` direto
+4. `packages = []` no `pyproject.toml` → removido + `package-mode = false`
+5. `ModuleNotFoundError: dashboard` → `sys.path.insert` (1 nível)
+6. `sys.path` conflito no Poetry venv (Codespaces) → condicional (`if not VIRTUAL_ENV`)
+7. `RuntimeError: Runtime instance already exists` → `run.py` vs main module path direto
 
-**Solução:** O `sys.path.insert` agora é condicional:
-```python
-if not os.environ.get('VIRTUAL_ENV'):
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-```
+**Dependências finais (66 packages):** streamlit, pandas, numpy, plotly, openpyxl, huggingface_hub, python-dotenv, pytest.
 
-Isso significa:
-- **Com Poetry/venv ativo**: `VIRTUAL_ENV` existe → não insere path → imports funcionam normalmente via Poetry
-- **Sem Poetry/venv** (Codespaces sem ambiente ativado, Streamlit Cloud): insere `src/` no path → `dashboard/` acessível
+**Aviso de health check transient:** A mensagem `connect: connection refused` no health check durante inicialização é normal em dashboards mais pesados. Não afeta a funcionalidade — o Uvicorn sobe corretamente.
 
-**Comando correto no Codespaces:**
-```bash
-poetry run streamlit run src/dashboard/main.py
-# ou ativar venv primeiro:
-source .venv/bin/activate
-streamlit run src/dashboard/main.py
-```
+## 12.13 Chatbot HF_TOKEN — Fallback em 3 camadas (Fechado ✅ 13/05/2026)
+
+**Problema:** No Streamlit Cloud, o chatbot crashava porque `load_dotenv()` em `llm_config.py` e `rag_pipeline.py` tentava carregar `.env.local` que não existe no servidor. Quando `load_dotenv` falha, sobrescreve `HF_TOKEN` com string vazia, e o token dos Secrets nunca era lido.
+
+**Solução:** Removido `load_dotenv` de ambos os arquivos; implementada fallback em 3 camadas em `get_api_key()`:
+
+1. **Primeiro:** `os.getenv("HF_TOKEN")` — funciona no Streamlit Cloud (Secrets expõe como env var) e localmente
+2. **Segundo:** `.env.local` apenas se existir — ambiente local com token no arquivo gitignored
+3. **Terceiro:** `st.secrets.get("HF_TOKEN")` — fallback direto no Streamlit Cloud
+
+**Arquivos alterados:**
+- `src/dashboard/chat/llm_config.py`: `get_api_key()` com fallback em 3 camadas; `has_api_key()` agora verifica `key.strip()`
+- `src/dashboard/chat/rag_pipeline.py`: removido `load_dotenv`; `HF_TOKEN` via `os.getenv()` direto
+
+**Testes:** 34/34 passando; imports OK.
+
+---
 
 *Documento atualizado em 13/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG (zero deps langchain)*

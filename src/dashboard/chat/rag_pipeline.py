@@ -7,10 +7,8 @@ import os
 import re
 import numpy as np
 import pandas as pd
-from dotenv import load_dotenv
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env.local"))
 HF_TOKEN = os.getenv("HF_TOKEN", "")
 
 EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"

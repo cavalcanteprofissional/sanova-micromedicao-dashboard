@@ -19,7 +19,7 @@ def get_api_key() -> str | None:
         return token
 
     # Segundo: carregar .env.local apenas se existir (ambiente local)
-    dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '.env.local')
+    dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env.local')
     if os.path.exists(dotenv_path):
         from dotenv import load_dotenv
         load_dotenv(dotenv_path=dotenv_path)

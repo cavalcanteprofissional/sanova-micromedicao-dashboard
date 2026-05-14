@@ -169,13 +169,13 @@ def render_header():
     document.head.appendChild(link);
     </script>
     ''')
-    st.markdown(f"""
-    <div style="display:flex;align-items:center;gap:28px;padding:16px 0 12px 0;">
-        <img src="{LOGO_SVG}" style="height:110px;width:auto;flex-shrink:0;" alt="SANOVA">
-        <div style="display:flex;flex-direction:column;gap:6px;justify-content:center;">
-            <p style="font-size:2.6rem;font-weight:800;color:#2980B9;margin:0;padding:0;line-height:1.1;font-family:inherit;">Análise Comercial de Micromedição</p>
-            <p style="font-size:1.15rem;color:#9BA0A6;margin:0;font-weight:400;font-family:inherit;">SANOVA | saneamento inteligente</p>
-        </div>
+    st.markdown("""
+    <div style="padding:16px 0 12px 0;">
+        <p style="font-size:2.6rem;font-weight:800;color:#2980B9;margin:0;padding:0;line-height:1.1;font-family:inherit;">Análise Comercial de Micromedição</p>
+        <p style="font-size:1.15rem;color:#9BA0A6;margin:0;font-weight:400;font-family:inherit;margin-top:4px;">SANOVA – Soluções para Gestão da Água</p>
+        <p style="font-size:0.85rem;color:#9BA0A6;margin:0;font-weight:400;font-family:inherit;margin-top:12px;">
+            Desenvolvido por <a href="https://cavalcanteprofissional.github.io/portfolio/" target="_blank" style="color:#2980B9;text-decoration:underline;">Lucas Cavalcante</a>
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -258,7 +258,7 @@ def render_sidebar_filters(df, qm):
 
 def main():
     st.set_page_config(
-        page_title="Micromedicao | Analise Comercial | SANOVA",
+        page_title="SANOVA | Análise Comercial de Micromedição",
         layout="wide",
         page_icon="💧"
     )

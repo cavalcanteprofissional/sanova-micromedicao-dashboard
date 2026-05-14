@@ -29,7 +29,8 @@ def render(df):
 
     col_t1, col_t2 = st.columns(2)
     with col_t1:
-        st.markdown("**Dispersão: Volume Lido × Volume Real**")
+        st.markdown("**📈 Dispersão: Volume Lido × Volume Real**")
+        st.caption("_Cada ponto é uma ligação. Linha vermelha = LIDO = REAL. Pontos à esquerda = possível subcobrança_")
         zoom = st.checkbox("Sem outliers (>P95)", value=True, key="scatter_zoom")
         scatter_df = df[df['VOLUME_LIDO'].notna() & df['VOLUME_REAL'].notna()].copy()
         
@@ -65,7 +66,8 @@ def render(df):
             st.caption(f"📌 Linha vermelha: LIDO = REAL. Pontos à esquerda = economia pode estar sendo beneficiada. Mostrando até P95 ({p95:.0f} m³).")
 
     with col_t2:
-        st.markdown("**Contagem por Tipo de Anomalia**")
+        st.markdown("**🚨 Contagem por Tipo de Anomalia**")
+        st.caption("_Quantidade de registros por tipo de inconsistência detectada_")
         tipo_data = {
             'Tipo': [
                 'Anomalia de Leitura (LIDO > REAL)',

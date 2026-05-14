@@ -40,7 +40,8 @@ def render(df, qm=None):
 
     col_g1, col_g2 = st.columns(2)
     with col_g1:
-        st.markdown("**Distribuição por Categoria**")
+        st.markdown("**📊 Distribuição por Categoria**")
+        st.caption("_Quantidade de ligações por categoria de uso_")
         cat_counts = df['CATEGORIA_PRINCIPAL'].value_counts().reset_index()
         cat_counts.columns = ['Categoria', 'Quantidade']
         cat_counts = cat_counts.sort_values('Quantidade', ascending=False)
@@ -63,7 +64,8 @@ def render(df, qm=None):
         st.plotly_chart(fig_pie, width='stretch')
 
     with col_g2:
-        st.markdown("**Distribuição por Situação da Ligação**")
+        st.markdown("**🔌 Distribuição por Situação da Ligação**")
+        st.caption("_Status operacional das ligações de água_")
         situacao_counts = df['SIT._LIG_AGUA'].value_counts().reset_index()
         situacao_counts.columns = ['Situacao', 'Quantidade']
 
@@ -96,7 +98,8 @@ def render(df, qm=None):
         )
         st.plotly_chart(fig_bar, width='stretch')
 
-    st.markdown("**Evolução do Faturamento (13 meses)**")
+    st.markdown("**💰 Evolução do Faturamento (13 meses)**")
+    st.caption("_Receita mensal faturada ao longo do período_")
     meses = [''] + [f'_{i:02d}' for i in range(1, 13)]
     meses_labels = get_month_labels()
 
@@ -128,7 +131,8 @@ def render(df, qm=None):
     )
     st.plotly_chart(fig_line, width='stretch')
 
-    st.markdown("**Consumo Médio por Categoria × Mês** *(volume faturado médio em m³)*")
+    st.markdown("**🌊 Consumo Médio por Categoria × Mês**")
+    st.caption("_Volume faturado médio (m³) por categoria ao longo dos meses. Verde = baixo, Vermelho = alto_")
     cat_mes_data = []
     for cat in df['CATEGORIA_PRINCIPAL'].unique():
         subset = df[df['CATEGORIA_PRINCIPAL'] == cat]

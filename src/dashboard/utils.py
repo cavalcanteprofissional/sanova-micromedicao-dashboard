@@ -29,3 +29,25 @@ def get_plotly_template():
 def render_methodology_expander():
     with st.expander("📋 Premissas e Metodologia", expanded=False):
         st.markdown(PREMISSAS)
+
+
+def section_title(title: str, tooltip: str = None):
+    if tooltip:
+        st.markdown(f"**{title}** ℹ️")
+        st.caption(f"_{tooltip}_")
+    else:
+        st.markdown(f"**{title}**")
+
+
+def render_card_container(title: str, content_func):
+    st.markdown(f"""
+    <div style="
+        background: #1E1E1E;
+        border: 1px solid #3A3A4A;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+    ">
+        <h4 style="color: #E0E0E0; margin: 0 0 12px 0; font-size: 1rem;">{title}</h4>
+    </div>
+    """, unsafe_allow_html=True)

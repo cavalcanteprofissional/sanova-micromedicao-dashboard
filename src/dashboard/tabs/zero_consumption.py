@@ -32,7 +32,8 @@ def render(df):
 
     col_g1, col_g2 = st.columns(2)
     with col_g1:
-        st.markdown("**Distribuição de Meses com Consumo Zero**")
+        st.markdown("**📊 Distribuição de Meses com Consumo Zero**")
+        st.caption("_Quantas ligações tiveram zero consumo por número de meses_")
         hist_data = zero_df['MESES_ZERO'].value_counts().sort_index().reset_index()
         hist_data.columns = ['Meses Zero', 'Qtd Ligações']
         fig_hist = px.bar(
@@ -44,7 +45,8 @@ def render(df):
         st.plotly_chart(fig_hist, width='stretch')
 
     with col_g2:
-        st.markdown("**Consumo Zero por Categoria**")
+        st.markdown("**📈 Consumo Zero por Categoria**")
+        st.caption("_Percentual de ligações com ao menos 1 mês de consumo zero, por categoria_")
         total_por_cat = zero_df.groupby('CATEGORIA_PRINCIPAL').size()
         cat_zero = zero_df[zero_df['MESES_ZERO'] >= 1].groupby('CATEGORIA_PRINCIPAL').size().reset_index()
         cat_zero.columns = ['Categoria', 'Qtd com Zero']

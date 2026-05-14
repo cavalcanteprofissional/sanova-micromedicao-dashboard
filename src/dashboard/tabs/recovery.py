@@ -62,12 +62,13 @@ def render(df):
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Total Receita Potencial (12m)", format_currency(total_receita))
+        st.metric("💰 Receita Potencial (12m)", format_currency(total_receita), delta_color="normal")
     with col2:
-        st.metric("Faturamento Atual (12m)", format_currency(faturamento_12m))
+        st.metric("📊 Faturamento Atual (12m)", format_currency(faturamento_12m), delta_color="off")
     with col3:
         pct = total_receita / faturamento_12m * 100 if faturamento_12m > 0 else 0
-        st.metric("% Potencial vs Faturamento", f"{pct:.1f}%")
+        cor_pct = "normal" if pct > 30 else ("off" if pct > 10 else "inverse")
+        st.metric("📈 % Potencial vs Faturamento", f"{pct:.1f}%", delta_color=cor_pct)
 
     st.divider()
 

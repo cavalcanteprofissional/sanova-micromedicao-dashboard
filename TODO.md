@@ -1297,6 +1297,211 @@ huggingface-hub = ">=0.20.0"
 
 ---
 
+## 13. Melhorias UI/UX — Visualização e Paleta de Cores (Planejado)
+
+### 13.1 Diagnóstico Visual — Análise por Aba
+
+#### 📊 Visão Geral (overview.py)
+
+| Componente | Problema | Impacto | Solução Proposta |
+|------------|----------|---------|------------------|
+| **KPI Cards (5 métricas)** | Cores genéricas, apenas `delta_color` | Não reflete criticidade real | Usar classes CSS `.metric-critico`, `.metric-alerta`, `.metric-sucesso` já definidas |
+| **Gráfico de Pizza (Categoria)** | Cores fixas #2980B9, #27AE60, #F39C12, #95A5A6 | Não distingue importância | Usar escala de cores semântica baseada em quantidade |
+| **Gráfico de Barras (Situação)** | Cores por situação, mas sem hierarquia clara | Difícil identificar prioridades | Destacar ATIVA em verde, CORTADA/SUPRIMIDA em vermelho |
+| **Area Chart (Faturamento)** | OK - área preenchida com azul | - | Manter, adicionar linha de tendência pontilhada |
+| **Heatmap (Consumo × Categoria)** | Escala Blues neutra | Não destaca valores críticos | Usar escala custom com verde→amarelo→vermelho para volume |
+
+#### 🚨 Anomalias & Fraudes (anomalies.py)
+
+| Componente | Problema | Impacto | Solução Proposta |
+|------------|----------|---------|------------------|
+| **Scatter (Lido × Real)** | Zoom no P95 bom, cores por categoria genéricas | Não destaca anomalias | Colorir pontos por `DIVERGENCIA_VOL`: >0 em vermelho |
+| **Barras (Tipos de Anomalia)** | Cores fixas | Não indica gravidade | Usar: Anomalia=vermelho, Outlier=laranja, Implausível=vermelho |
+| **Tabela de Prioritários** | Sem cores nas linhas | Difícil identificar casos críticos | Colorir linhas por `SCORE_PRIORIDADE`: >=100=vermelho, >=50=laranja |
+
+#### 📉 Consumo Zero (zero_consumption.py)
+
+| Componente | Problema | Impacto | Solução Proposta |
+|------------|----------|---------|------------------|
+| **Histograma (Meses Zero)** | Escala Reds aplicada automaticamente | Bom, mas semthreshold | Destacar 12 meses em vermelho escuro |
+| **Barras (Por Categoria)** | Cores por categoria fixas | Não indica criticidade | Colorir baseado em % com zero (alta % = vermelho) |
+| **Tabela (Casos Críticos)** | Sem cores condicionais | Difícil priorizar | Colorir linhas por `MESES_ZERO`: >=12=vermelho, >=6=laranja |
+
+#### 🔧 Hidrômetros (meters.py)
+
+| Componente | Problema | Impacto | Solução Proposta |
+|------------|----------|---------|------------------|
+| **Pie Chart (Tipo)** | Cores ok | - | Manter |
+| **Barras (Marca)** | Escala Blues neutra | Bom, manter | Manter |
+| **Barras (Classe)** | Escala Greens neutra | Bom, manter | Manter |
+| **Histograma (Idade)** | Bom, vline no limiar | - | Destacar área >5 anos com cor diferente |
+| **Tabela (Substituição)** | Sem cores | Difícil identificar prioridade | Colorir por `IDADE_HIDRO_ANOS`: >8=vermelho, >5=laranja |
+
+#### 💰 Recuperação de Receita (recovery.py)
+
+| Componente | Problema | Impacto | Solução Proposta |
+|------------|----------|---------|------------------|
+| **Waterfall** | Cores ok | - | Manter, adicionar hover com valores detalhados |
+| **Gauge** | Steps com cores, mas escala linear | Não mostra % do faturamento | Usar escala proporcional ao faturamento atual |
+| **Tabela (Ações)** | Cores por prioridade já implementadas | - | Manter, adicionar tooltip com detalhamento |
+
+#### 🔍 Qualidade de Dados (data_quality.py)
+
+| Componente | Problema | Impacto | Solução Proposta |
+|------------|----------|---------|------------------|
+| **Line Chart (Missing)** | COR_CRITICO fixo | Bom | Manter |
+| **Heatmap (Missing × Coluna)** | Escala Reds ok | - | Manter, adicionar threshold visual |
+| **Tabela (Inconsistências)** | Sem cores | Difícil priorizar | Colorir por quantidade: >100=vermelho, >50=laranja |
+| **Barras (Por Situação)** | Escala Reds automática | Bom | Manter |
+
+---
+
+### 13.2 Paleta de Cores Semântica (Dark Mode)
+
+#### Cores de Status (使用时的一致性)
+
+| Status | Hex | RGB | Uso | Exemplo |
+|--------|-----|-----|-----|---------|
+| **INFO** | `#2980B9` | 41, 128, 185 | Informativo, neutro, links | Ligações ativas, headers |
+| **SUCESSO** | `#27AE60` | 39, 174, 96 | Bom, normal, recuperável | IQD ≥90%, ATIVA |
+| **ALERTA** | `#F39C12` | 243, 156, 18 | Atenção, médio risco | IQD 70-90%, média criticidade |
+| **CRÍTICO** | `#E74C3C` | 231, 76, 60 | Urgência, ação necessária | Anomalias, consumo zero crônico |
+| **NEUTRO** | `#95A5A6` | 149, 165, 166 | Inativo, cancelado | Cancelada, Suprimida |
+| **ATIVO** | `#1ABC9C` | 26, 188, 156 | Ligações ativas (destaque) | Diferente de SUCESSO |
+
+#### Paleta de Visualização (Gráficos)
+
+```
+Verde → Amarelo → Vermelho (para escalas de criticidade):
+  #27AE60 (verde) → #F39C12 (amarelo) → #E74C3C (vermelho)
+
+Azul (para dados neutros/quantitativos):
+  #2980B9 (escuro) → #5DADE2 (claro)
+
+Escalas Plotly recomendadas:
+  - heatmaps: 'RdYlGn_r' (vermelho=alto, verde=baixo)
+  - histogramas: 'Reds' para warnings, 'Blues' para dados
+  - bar charts: Usar cores semânticas, não automáticas
+```
+
+---
+
+### 13.3 Plano de Implementação
+
+#### Fase UI-1: CSS e Variáveis (Impacto Alto)
+
+| # | Tarefa | Arquivo | Descrição |
+|---|--------|---------|-----------|
+| UI-1.1 | Melhorar variáveis CSS | `main.py` | Adicionar `--cor-ativo` (#1ABC9C), `--cor-sucesso-claro`, `--cor-alerta-claro` |
+| UI-1.2 | Estilizar KPI cards | `main.py` | Usar classes `.metric-critico`, `.metric-alerta`, `.metric-sucesso` nos cards |
+| UI-1.3 | Container de KPIs | `main.py` | Criar `.kpi-container` com display flex e gap |
+
+#### Fase UI-2: KPI Cards Condicionais (Impacto Alto)
+
+| # | Tarefa | Arquivo | Descrição |
+|---|--------|---------|-----------|
+| UI-2.1 | overview.py KPIs | `tabs/overview.py` | Aplicar cores condicionais: Ligações Ativas=azul, Casos Críticos=vermelho se >0 |
+| UI-2.2 | zero_consumption.py KPIs | `tabs/zero_consumption.py` | Receita Perdida em vermelho (alerta) |
+| UI-2.3 | meters.py KPIs | `tabs/meters.py` | Candidatos Substit. em laranja se >10% |
+| UI-2.4 | recovery.py KPIs | `tabs/recovery.py` | Receita Potencial em verde, % em laranja/verde conforme |
+| UI-2.5 | data_quality.py KPIs | `tabs/data_quality.py` | IQD em cor condicional (verde/laranja/vermelho) |
+
+#### Fase UI-3: Gráficos com Cores Semânticas (Impacto Alto)
+
+| # | Tarefa | Arquivo | Descrição |
+|---|--------|---------|-----------|
+| UI-3.1 | overview.py pizza | `tabs/overview.py` | Cores por quantidade: maior=azul, menores=cinza |
+| UI-3.2 | overview.py barras situação | `tabs/overview.py` | ATIVA=verde, CORTADA=vermelho, OUTROS=cinza |
+| UI-3.3 | overview.py heatmap | `tabs/overview.py` | Escala RdYlGn_r (valores altos=vermelho) |
+| UI-3.4 | anomalies.py scatter | `tabs/anomalies.py` | Colorir por DIVERGENCIA_VOL: <0=vermelho |
+| UI-3.5 | anomalies.py barras | `tabs/anomalies.py` | Cores fixas: Anomalia=vermelho, Outlier=laranja |
+| UI-3.6 | zero_consumption.py barras | `tabs/zero_consumption.py` | Colorir por % com zero |
+| UI-3.7 | meters.py histograma | `tabs/meters.py` | Destacar área >5 anos |
+
+#### Fase UI-4: Tabelas com Cores Condicionais (Impacto Médio)
+
+| # | Tarefa | Arquivo | Descrição |
+|---|--------|---------|-----------|
+| UI-4.1 | anomalies.py tabela | `tabs/anomalies.py` | Linhas coloridas por SCORE_PRIORIDADE |
+| UI-4.2 | zero_consumption.py tabela | `tabs/zero_consumption.py` | Linhas coloridas por MESES_ZERO |
+| UI-4.3 | meters.py tabela | `tabs/meters.py` | Linhas coloridas por IDADE_HIDRO_ANOS |
+| UI-4.4 | data_quality.py tabela | `tabs/data_quality.py` | Linhas coloridas por Qtd de inconsistências |
+
+#### Fase UI-5: Layout e Espaçamento (Impacto Médio)
+
+| # | Tarefa | Arquivo | Descrição |
+|---|--------|---------|-----------|
+| UI-5.1 | Containers de gráficos | `main.py` + tabs | Agrupar gráficos em containers visuais |
+| UI-5.2 | Tooltips descritivos | tabs/*.py | Adicionar descrições nos títulos dos gráficos |
+| UI-5.3 | Hierarquia visual | `main.py` | Usar headers H1→H2→H3 consistentemente |
+| UI-5.4 | Gap entre elementos | tabs/*.py | Uniformizar gap=16px ou 24px |
+
+#### Fase UI-6: Componentes Customizados (Impacto Baixo)
+
+| # | Tarefa | Descrição |
+|---|--------|-----------|
+| UI-6.1 | Função `render_kpi()` | Criar helper para renderizar KPIs com cor automaticamente |
+| UI-6.2 | Função `render_card()` | Container com borda colorida para stats |
+| UI-6.3 | Função `colorize_table()` | Aplicar cores em DataFrames com Styller |
+
+---
+
+### 13.4 Checklist de Implementação
+
+```
+Fase UI-1: CSS e Variáveis
+  ☐ UI-1.1 Adicionar variáveis CSS
+  ☐ UI-1.2 Estilizar KPI cards
+  ☐ UI-1.3 Container de KPIs
+
+Fase UI-2: KPI Cards Condicionais
+  ☐ UI-2.1 overview.py KPIs
+  ☐ UI-2.2 zero_consumption.py KPIs
+  ☐ UI-2.3 meters.py KPIs
+  ☐ UI-2.4 recovery.py KPIs
+  ☐ UI-2.5 data_quality.py KPIs
+
+Fase UI-3: Gráficos com Cores Semânticas
+  ☐ UI-3.1 overview.py pizza
+  ☐ UI-3.2 overview.py barras situação
+  ☐ UI-3.3 overview.py heatmap
+  ☐ UI-3.4 anomalies.py scatter
+  ☐ UI-3.5 anomalies.py barras
+  ☐ UI-3.6 zero_consumption.py barras
+  ☐ UI-3.7 meters.py histograma
+
+Fase UI-4: Tabelas com Cores
+  ☐ UI-4.1 anomalies.py tabela
+  ☐ UI-4.2 zero_consumption.py tabela
+  ☐ UI-4.3 meters.py tabela
+  ☐ UI-4.4 data_quality.py tabela
+
+Fase UI-5: Layout e Espaçamento
+  ☐ UI-5.1 Containers de gráficos
+  ☐ UI-5.2 Tooltips descritivos
+  ☐ UI-5.3 Hierarquia visual
+  ☐ UI-5.4 Gap uniforme
+
+Fase UI-6: Componentes Customizados
+  ☐ UI-6.1 render_kpi()
+  ☐ UI-6.2 render_card()
+  ☐ UI-6.3 colorize_table()
+```
+
+---
+
+### 13.5 Resultados Esperados
+
+| Métrica | Antes | Depois |
+|---------|-------|--------|
+| **Clareza dos KPIs** | Cores genéricas | Cores semânticas por status |
+| **Identificação de problemas** | Difícil priorizar | Verde/Laranja/Vermelho claros |
+| **Consistência visual** | Cores variadas | Paleta padronizada |
+| **Tabelas legíveis** | Sem destaque | Linhas coloridas por criticidade |
+| **Experiência do usuário** | UI funcional mas básica | Dashboard profissional e visual |
+
+---
+
 ## Status Final — Projeto Completo
 
 | Componente | Status |
@@ -1306,4 +1511,5 @@ huggingface-hub = ">=0.20.0"
 | 34 Testes | ✅ Passando |
 | Dark Mode | ✅ Implementado |
 | Chatbot Leve | ✅ Implementado (Cohere API + requests, timeout 90s) |
+| UI/UX Improvements | ⏳ Planejado (seção 13) |
 | Streamlit Cloud | ⏳ Pending deploy |

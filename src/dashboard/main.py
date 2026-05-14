@@ -20,7 +20,77 @@ LOGO_SVG = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVV
 def render_header():
     st.html('''
     <style>
+        :root {
+            --cor-agua: #2980B9;
+            --cor-ativo: #1ABC9C;
+            --cor-sucesso: #27AE60;
+            --cor-sucesso-claro: #2ECC71;
+            --cor-alerta: #F39C12;
+            --cor-alerta-claro: #F5B041;
+            --cor-critico: #E74C3C;
+            --cor-critico-claro: #EC7063;
+            --cor-neutro: #95A5A6;
+            --cor-neutro-claro: #ABB2B9;
+            --bg-card: #1E1E1E;
+            --bg-sidebar: #1A1A2E;
+            --bg-sidebar-section: #252540;
+            --bg-kpi: #232323;
+            --texto-principal: #E0E0E0;
+            --texto-secundario: #9BA0A6;
+            --borda: #3A3A4A;
+            --borda-clara: #4A4A5A;
+        }
         .stApp { background: #0E1117; }
+        
+        /* KPI Container */
+        .kpi-container {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .kpi-container > div {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        /* KPI Cards Melhorados */
+        div[data-testid="stMetric"] {
+            border-left: 4px solid var(--cor-agua);
+            padding: 16px 20px;
+            background: var(--bg-kpi);
+            border-radius: 8px;
+            color: var(--texto-principal);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        div[data-testid="stMetric"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        div[data-testid="stMetric"] label,
+        div[data-testid="stMetric"] [data-testid="stMetricLabel"],
+        div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+            color: var(--texto-principal) !important;
+        }
+        div[data-testid="stMetric"] [data-testid="stMetricLabel"] {
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        /* KPI status colors */
+        div[data-testid="stMetric"].metric-info { border-left-color: var(--cor-agua); }
+        div[data-testid="stMetric"].metric-ativo { border-left-color: var(--cor-ativo); }
+        div[data-testid="stMetric"].metric-sucesso { border-left-color: var(--cor-sucesso); }
+        div[data-testid="stMetric"].metric-alerta { border-left-color: var(--cor-alerta); }
+        div[data-testid="stMetric"].metric-critico { border-left-color: var(--cor-critico); }
+        div[data-testid="stMetric"].metric-neutro { border-left-color: var(--cor-neutro); }
+        
         .page-header {
             display: flex !important;
             align-items: center !important;
@@ -60,21 +130,6 @@ def render_header():
         section[data-testid="stSidebar"] h4 {
             color: var(--texto-principal);
         }
-        div[data-testid="stMetric"] {
-            border-left: 4px solid var(--cor-agua);
-            padding: 12px 16px;
-            background: var(--bg-card);
-            border-radius: 6px;
-            color: var(--texto-principal);
-        }
-        div[data-testid="stMetric"] label,
-        div[data-testid="stMetric"] [data-testid="stMetricLabel"],
-        div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-            color: var(--texto-principal) !important;
-        }
-        div[data-testid="stMetric"].metric-critico { border-left-color: var(--cor-critico); }
-        div[data-testid="stMetric"].metric-alerta { border-left-color: var(--cor-alerta); }
-        div[data-testid="stMetric"].metric-sucesso { border-left-color: var(--cor-sucesso); }
         .sidebar-section {
             background: var(--bg-sidebar-section);
             border-radius: 8px;

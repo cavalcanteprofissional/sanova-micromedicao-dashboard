@@ -11,14 +11,16 @@ def render(df):
     col1, col2, col3 = st.columns(3)
     with col1:
         total = len(df[df['NUMERO_HIDROMETRO'].notna()])
-        st.metric("Total de Hidrômetros", f"{total:,}")
+        st.metric("🔧 Total de Hidrômetros", f"{total:,}", delta_color="off")
     with col2:
         velhos = (df['IDADE_HIDRO_ANOS'].fillna(0) > IDADE_HIDRO_CRITICA).sum()
         pct = velhos/total*100 if total > 0 else 0
-        st.metric(f"Candidatos Substit. (> {IDADE_HIDRO_CRITICA} anos)", f"{velhos:,}", delta=f"{pct:.1f}%")
+        cor_cand = "inverse" if pct > 10 else "normal"
+        st.metric("⚠️ Candidatos Substit.", f"{velhos:,}", delta=f"{pct:.1f}%", delta_color=cor_cand)
     with col3:
         media_idade = df['IDADE_HIDRO_ANOS'].mean()
-        st.metric("Idade Média (anos)", f"{media_idade:.1f}")
+        cor_idade = "inverse" if media_idade > 4 else "off"
+        st.metric("📅 Idade Média", f"{media_idade:.1f} anos", delta_color=cor_idade)
 
     st.divider()
 

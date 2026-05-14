@@ -17,21 +17,24 @@ def render(df, qm=None):
 
     iqd = qm['iqd'] if qm else 88.4
 
-    st.markdown("### Métricas Chave (KPIs)")
+    st.markdown('<div class="kpi-container">', unsafe_allow_html=True)
 
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
-        st.metric("💧 Ligações Ativas", f"{ativas:,}")
+        st.metric("💧 Ligações Ativas", f"{ativas:,}", delta_color="normal")
     with col2:
-        st.metric("💰 Faturamento Atual", f"R$ {receita:,.2f}", delta_color="normal")
+        st.metric("💰 Faturamento Mensal", f"R$ {receita:,.2f}", delta_color="normal")
     with col3:
-        st.metric("📊 Volume Faturado", f"{vol_total:,.0f} m³", delta_color="normal")
+        st.metric("📊 Volume Faturado", f"{vol_total:,.0f} m³", delta_color="off")
     with col4:
         cor_delta = "inverse" if anomalias > 0 else "normal"
-        st.metric("🚨 Casos Críticos", f"{anomalias}", delta="Verificar" if anomalias > 0 else "Normal", delta_color=cor_delta)
+        st.metric("🚨 Casos Críticos", f"{anomalias}", delta="Atenção!" if anomalias > 0 else "OK", delta_color=cor_delta)
     with col5:
         cor_iqd = "normal" if iqd >= 90 else ("off" if iqd >= 70 else "inverse")
-        st.metric("📋 IQD", f"{iqd}%", delta_color=cor_iqd)
+        label_iqd = "Excelente" if iqd >= 90 else ("Atenção" if iqd >= 70 else "Crítico")
+        st.metric("📋 IQD", f"{iqd}%", delta=label_iqd, delta_color=cor_iqd)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.divider()
 
@@ -84,7 +87,7 @@ def render(df, qm=None):
     for s, label in zip(meses, meses_labels):
         col_name = f'VALOR_TOTAL{s}' if s else 'VALOR_TOTAL'
         val = df[col_name].sum()
-        fat_mensal.append({'Mes': label, 'Faturamento': val})
+        fat_mensal.append({'Mes': label, 'Faturamento': val, 'Indice': len(fat_mensal)})
 
     fat_df = pd.DataFrame(fat_mensal)
     fig_line = px.area(
@@ -92,11 +95,19 @@ def render(df, qm=None):
         template=get_plotly_template(),
         color_discrete_sequence=['#2980B9']
     )
+    fig_line.add_traces(go.Scatter(
+        x=fat_df['Mes'], y=fat_df['Faturamento'],
+        mode='lines+markers',
+        line=dict(color='#1ABC9C', width=2, dash='dot'),
+        marker=dict(size=6, color='#1ABC9C'),
+        name='Tendência'
+    ))
     fig_line.update_layout(
         yaxis_tickprefix='R$ ',
         height=350,
         xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=True,         gridcolor='rgba(255,255,255,0.1)')
+        yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.1)'),
+        legend=dict(orientation='h', yanchor='bottom', y=-0.25, xanchor='center', x=0.5)
     )
     st.plotly_chart(fig_line, width='stretch')
 

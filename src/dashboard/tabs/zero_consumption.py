@@ -19,13 +19,14 @@ def render(df):
     col1, col2, col3 = st.columns(3)
     with col1:
         total_ativas = len(zero_df)
-        st.metric("Ligações Ativas", f"{total_ativas:,}")
+        st.metric("💧 Ligações Ativas", f"{total_ativas:,}", delta_color="normal")
     with col2:
         com_zero = (zero_df['MESES_ZERO'] > 0).sum()
-        st.metric("Com Consumo Zero (ao menos 1 mês)", f"{com_zero:,}")
+        pct_zero = com_zero / total_ativas * 100 if total_ativas > 0 else 0
+        st.metric("⚠️ Com Consumo Zero", f"{com_zero:,}", delta=f"{pct_zero:.1f}% das ativas", delta_color="inverse")
     with col3:
         receita_perdida = zero_df['MESES_ZERO'].sum() * TARIFA_MINIMA
-        st.metric("Receita Potencial Perdida", format_currency(receita_perdida))
+        st.metric("💸 Receita Potencial Perdida", format_currency(receita_perdida), delta_color="inverse")
 
     st.divider()
 

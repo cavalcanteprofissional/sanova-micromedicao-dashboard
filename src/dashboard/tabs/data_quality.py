@@ -26,14 +26,20 @@ def render(df, qm=None):
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("IQD - Indice de Qualidade", f"{qm['iqd']}%")
+        iqd = qm['iqd']
+        cor_iqd = "normal" if iqd >= 90 else ("off" if iqd >= 70 else "inverse")
+        label_iqd = "Excelente" if iqd >= 90 else ("Atenção" if iqd >= 70 else "Crítico")
+        st.metric("📋 IQD - Índice de Qualidade", f"{iqd}%", delta=label_iqd, delta_color=cor_iqd)
     with col2:
-        st.metric("Registros Completos", f"{qm['registros_completos']:,} / {qm['total_registros']:,}")
+        st.metric("✅ Registros Completos", f"{qm['registros_completos']:,} / {qm['total_registros']:,}", delta_color="off")
     with col3:
-        st.metric("Registros Incompletos", f"{qm['dados_incompletos']:,}")
+        incompletos = qm['dados_incompletos']
+        pct_incomp = incompletos / qm['total_registros'] * 100
+        cor_incomp = "inverse" if pct_incomp > 10 else "normal"
+        st.metric("⚠️ Registros Incompletos", f"{incompletos:,}", delta=f"{pct_incomp:.1f}%", delta_color=cor_incomp)
     with col4:
         receita_perdida_missing = qm['dados_incompletos'] * TARIFA_MINIMA
-        st.metric("Receita Perdida Est. (Missing)", format_currency(receita_perdida_missing))
+        st.metric("💸 Receita Perdida (Missing)", format_currency(receita_perdida_missing), delta_color="inverse")
 
     st.divider()
 

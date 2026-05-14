@@ -5,7 +5,26 @@ import hashlib
 
 def render(df: pd.DataFrame):
     """Renderiza a interface do chatbot na sidebar."""
-    st.markdown("##### 💬 Assistente IA")
+    st.markdown("""
+    <style>
+        div[data-testid="stChatInput"] textarea {
+            min-height: 50px !important;
+            max-height: 80px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <style>
+        .chat-title {
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+            color: #2980B9 !important;
+            margin-bottom: 4px !important;
+        }
+    </style>
+    <p class="chat-title">💬 Assistente IA</p>
+    """, unsafe_allow_html=True)
     st.caption("Pergunte sobre micromedição, consumo, faturamento e oportunidades.")
 
     from dashboard.chat.llm import has_api_key, get_stats_context

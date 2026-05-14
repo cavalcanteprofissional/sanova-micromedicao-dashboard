@@ -122,16 +122,15 @@ def render(df):
         "SCORE_PRIORIDADE": st.column_config.NumberColumn("Score", format="%d")
     }
     
-    def colorize_score(row):
-        score = row.get('SCORE_PRIORIDADE', 0)
+    def colorize_score(score):
         if pd.isna(score):
-            return [''] * len(row)
+            return ''
         if score >= 100:
-            return ['background-color: #2D1F1F; color: #E74C3C'] * len(row)
+            return 'background-color: #2D1F1F; color: #E74C3C'
         elif score >= 50:
-            return ['background-color: #2D2A1A; color: #F39C12'] * len(row)
+            return 'background-color: #2D2A1A; color: #F39C12'
         else:
-            return [''] * len(row)
+            return ''
     
     if len(table_df) > 50:
         page = st.number_input("Página", 1, max(1, (len(table_df) - 1) // 50 + 1), 1, key="anom_page")

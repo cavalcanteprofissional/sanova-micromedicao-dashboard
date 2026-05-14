@@ -135,14 +135,13 @@ def render(df, qm=None):
     miss_by_col = sorted(miss_by_col, key=lambda x: x['Missing'], reverse=True)[:10]
     miss_col_df = pd.DataFrame(miss_by_col)
     
-    def colorize_missing(row):
-        pct = row.get('Missing (%)', 0)
+    def colorize_missing(pct):
         if pct > 20:
-            return ['background-color: #2D1F1F; color: #E74C3C'] * len(row)
+            return 'background-color: #2D1F1F; color: #E74C3C'
         elif pct > 5:
-            return ['background-color: #2D2A1A; color: #F39C12'] * len(row)
+            return 'background-color: #2D2A1A; color: #F39C12'
         else:
-            return [''] * len(row)
+            return ''
     
     styled_missing = miss_col_df.style.map(colorize_missing, subset=['Missing (%)'])
     st.dataframe(styled_missing, width='stretch', hide_index=True)

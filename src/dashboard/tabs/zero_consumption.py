@@ -60,8 +60,7 @@ def render(df):
             color='Percentual',
             color_continuous_scale='Reds',
             range_color=[0, 50],
-            text='Percentual',
-            texttemplate='%{text:.1f}%'
+            text='Percentual'
         )
         fig_cat.update_traces(hovertemplate='<b>%{x}</b><br>Com Zero: %{y:,}<br>Percentual: %{text:.1f}%<extra></extra>')
         fig_cat.update_layout(
@@ -88,14 +87,13 @@ def render(df):
         "Receita_Perdida_Estimada": st.column_config.NumberColumn("Receita Perdida (R$)", format="R$ %.2f")
     }
     
-    def colorize_zero(row):
-        meses = row.get('MESES_ZERO', 0)
+    def colorize_zero(meses):
         if meses >= 12:
-            return ['background-color: #2D1F1F; color: #E74C3C'] * len(row)
+            return 'background-color: #2D1F1F; color: #E74C3C'
         elif meses >= 6:
-            return ['background-color: #2D2A1A; color: #F39C12'] * len(row)
+            return 'background-color: #2D2A1A; color: #F39C12'
         else:
-            return [''] * len(row)
+            return ''
     
     if len(criticos) > 50:
         page = st.number_input("Página", 1, max(1, (len(criticos) - 1) // 50 + 1), 1, key="zero_page")

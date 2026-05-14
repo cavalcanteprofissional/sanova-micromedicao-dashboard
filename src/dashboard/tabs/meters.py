@@ -96,14 +96,13 @@ def render(df):
         "Receita_Potencial_Submed": st.column_config.NumberColumn("Receita Potencial (R$)", format="R$ %.2f")
     }
     
-    def colorize_idade(row):
-        idade = row.get('IDADE_HIDRO_ANOS', 0)
+    def colorize_idade(idade):
         if idade >= 8:
-            return ['background-color: #2D1F1F; color: #E74C3C'] * len(row)
+            return 'background-color: #2D1F1F; color: #E74C3C'
         elif idade >= 5:
-            return ['background-color: #2D2A1A; color: #F39C12'] * len(row)
+            return 'background-color: #2D2A1A; color: #F39C12'
         else:
-            return [''] * len(row)
+            return ''
     
     if len(sub_table) > 50:
         page = st.number_input("Página", 1, max(1, (len(sub_table) - 1) // 50 + 1), 1, key="meters_page")

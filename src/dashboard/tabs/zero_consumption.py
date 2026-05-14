@@ -45,15 +45,29 @@ def render(df):
 
     with col_g2:
         st.markdown("**Consumo Zero por Categoria**")
+        total_por_cat = zero_df.groupby('CATEGORIA_PRINCIPAL').size()
         cat_zero = zero_df[zero_df['MESES_ZERO'] >= 1].groupby('CATEGORIA_PRINCIPAL').size().reset_index()
         cat_zero.columns = ['Categoria', 'Qtd com Zero']
+        cat_zero['Total'] = cat_zero['Categoria'].map(total_por_cat)
+        cat_zero['Percentual'] = (cat_zero['Qtd com Zero'] / cat_zero['Total'] * 100).round(1)
+        cat_zero = cat_zero.sort_values('Percentual', ascending=False)
+        
         fig_cat = px.bar(
             cat_zero, x='Categoria', y='Qtd com Zero',
             template=get_plotly_template(),
-            color='Categoria',
-            color_discrete_sequence=[COR_CRITICO, COR_ALERTA, COR_OK, COR_INFO]
+            color='Percentual',
+            color_continuous_scale='Reds',
+            range_color=[0, 50],
+            text='Percentual',
+            texttemplate='%{text:.1f}%'
         )
-        fig_cat.update_layout(showlegend=False, height=350)
+        fig_cat.update_traces(hovertemplate='<b>%{x}</b><br>Com Zero: %{y:,}<br>Percentual: %{text:.1f}%<extra></extra>')
+        fig_cat.update_layout(
+            showlegend=False,
+            height=350,
+            coloraxis_colorbar=dict(title="% com Zero", tickformat='.0f'),
+            font=dict(color='#E0E0E0')
+        )
         st.plotly_chart(fig_cat, width='stretch')
 
     st.divider()
@@ -64,13 +78,32 @@ def render(df):
 
     criticos = criticos.copy()
     criticos['Receita_Perdida_Estimada'] = criticos['MESES_ZERO'] * TARIFA_MINIMA
+    
+    col_config = {
+        "MESES_ZERO": st.column_config.NumberColumn("Meses Zero", format="%d"),
+        "VOLUME_LIDO": st.column_config.NumberColumn("Volume Lido (m³)", format="%.1f"),
+        "VOLUME_FATURADO": st.column_config.NumberColumn("Volume Faturado (m³)", format="%.1f"),
+        "Receita_Perdida_Estimada": st.column_config.NumberColumn("Receita Perdida (R$)", format="R$ %.2f")
+    }
+    
+    def colorize_zero(row):
+        meses = row.get('MESES_ZERO', 0)
+        if meses >= 12:
+            return ['background-color: #2D1F1F; color: #E74C3C'] * len(row)
+        elif meses >= 6:
+            return ['background-color: #2D2A1A; color: #F39C12'] * len(row)
+        else:
+            return [''] * len(row)
+    
     if len(criticos) > 50:
         page = st.number_input("Página", 1, max(1, (len(criticos) - 1) // 50 + 1), 1, key="zero_page")
         start = (page - 1) * 50
         criticos_page = criticos.iloc[start:start + 50]
     else:
         criticos_page = criticos
-    st.dataframe(criticos_page, width='stretch', height=400)
+    
+    styled_criticos = criticos_page.style.map(colorize_zero, subset=['MESES_ZERO'])
+    st.dataframe(styled_criticos, width='stretch', height=400, column_config=col_config)
 
     st.markdown(f"**Total de ligações críticas (≥ 3 meses zero):** {len(criticos):,}")
     st.markdown(f"**Receita perdida estimada (casos críticos):** {format_currency(criticos['Receita_Perdida_Estimada'].sum())}")

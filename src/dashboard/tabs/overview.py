@@ -43,14 +43,22 @@ def render(df, qm=None):
         st.markdown("**Distribuição por Categoria**")
         cat_counts = df['CATEGORIA_PRINCIPAL'].value_counts().reset_index()
         cat_counts.columns = ['Categoria', 'Quantidade']
+        cat_counts = cat_counts.sort_values('Quantidade', ascending=False)
+        cores_cat = ['#2980B9', '#1ABC9C', '#95A5A6', '#F39C12'][:len(cat_counts)]
         fig_pie = px.pie(
             cat_counts, values='Quantidade', names='Categoria',
-            hole=0.4, template=get_plotly_template(),
-            color_discrete_sequence=['#2980B9', '#27AE60', '#F39C12', '#95A5A6']
+            hole=0.45, template=get_plotly_template(),
+            color_discrete_sequence=cores_cat
+        )
+        fig_pie.update_traces(
+            textposition='inside',
+            textinfo='percent+label',
+            hovertemplate='<b>%{label}</b><br>Quantidade: %{value:,}<br>Percentual: %{percent}<extra></extra>'
         )
         fig_pie.update_layout(
-            legend=dict(orientation='h', yanchor='bottom', y=-0.2),
-            margin=dict(t=20, b=40)
+            legend=dict(orientation='h', yanchor='bottom', y=-0.15, xanchor='center', x=0.5),
+            margin=dict(t=20, b=30),
+            font=dict(color='#E0E0E0')
         )
         st.plotly_chart(fig_pie, width='stretch')
 
@@ -60,13 +68,13 @@ def render(df, qm=None):
         situacao_counts.columns = ['Situacao', 'Quantidade']
 
         cor_situacao = {
-            'ATIVA': '#27AE60',
+            'ATIVA': '#1ABC9C',
             'CANCELADA': '#95A5A6',
             'CORTADA RAMAL': '#E74C3C',
             'CORTADA CAVALETE': '#E74C3C',
             'CORTADA NA FITA': '#E74C3C',
-            'SUPRIMIDA': '#95A5A6',
-            'ELIMINADA': '#95A5A6',
+            'SUPRIMIDA': '#7F8C8D',
+            'ELIMINADA': '#7F8C8D',
             'NAO INFORMADA': '#F39C12',
         }
         bar_colors = [cor_situacao.get(s, '#95A5A6') for s in situacao_counts['Situacao']]
@@ -75,8 +83,17 @@ def render(df, qm=None):
             situacao_counts, y='Situacao', x='Quantidade',
             orientation='h', template=get_plotly_template(),
         )
-        fig_bar.update_traces(marker_color=bar_colors)
-        fig_bar.update_layout(showlegend=False, yaxis={'autorange': 'reversed'}, margin=dict(t=20))
+        fig_bar.update_traces(
+            marker_color=bar_colors,
+            hovertemplate='<b>%{y}</b><br>Quantidade: %{x:,}<extra></extra>'
+        )
+        fig_bar.update_layout(
+            showlegend=False,
+            yaxis={'autorange': 'reversed'},
+            margin=dict(t=20),
+            xaxis=dict(gridcolor='rgba(255,255,255,0.1)'),
+            font=dict(color='#E0E0E0')
+        )
         st.plotly_chart(fig_bar, width='stretch')
 
     st.markdown("**Evolução do Faturamento (13 meses)**")
@@ -124,14 +141,26 @@ def render(df, qm=None):
     pivot_df = heat_df.pivot(index='Categoria', columns='Mes', values='Media Volume (m3)')
     col_order = get_month_labels()
     pivot_df = pivot_df.reindex(columns=col_order)
+    
+    z_min = pivot_df.values.min()
+    z_max = pivot_df.values.max()
+    
     fig_heat = go.Figure(data=go.Heatmap(
         z=pivot_df.values,
         x=pivot_df.columns,
         y=pivot_df.index,
-        colorscale='Blues',
+        colorscale='RdYlGn_r',
+        zmin=z_min,
+        zmax=z_max,
         text=pivot_df.values,
         texttemplate='%{text:.0f}',
-        hovertemplate='Categoria: %{y}<br>Mês: %{x}<br>Média: %{text:.1f} m³<extra></extra>'
+        textfont=dict(color='white', size=10),
+        hovertemplate='<b>%{y}</b><br>%{x}<br>Média: %{text:.1f} m³<extra></extra>'
     ))
-    fig_heat.update_layout(height=300, template=get_plotly_template(), margin=dict(t=20))
+    fig_heat.update_layout(
+        height=300,
+        template=get_plotly_template(),
+        margin=dict(t=20),
+        font=dict(color='#E0E0E0')
+    )
     st.plotly_chart(fig_heat, width='stretch')

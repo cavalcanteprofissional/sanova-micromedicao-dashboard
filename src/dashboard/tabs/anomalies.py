@@ -32,25 +32,37 @@ def render(df):
         st.markdown("**Dispersão: Volume Lido × Volume Real**")
         zoom = st.checkbox("Sem outliers (>P95)", value=True, key="scatter_zoom")
         scatter_df = df[df['VOLUME_LIDO'].notna() & df['VOLUME_REAL'].notna()].copy()
+        
+        scatter_df['DIVERGENCIA'] = scatter_df['VOLUME_LIDO'] - scatter_df['VOLUME_REAL']
+        
         if zoom:
             p95 = scatter_df['VOLUME_LIDO'].quantile(0.95)
             scatter_df = scatter_df[scatter_df['VOLUME_LIDO'] <= p95]
+        
         fig_scatter = px.scatter(
             scatter_df,
             x='VOLUME_LIDO', y='VOLUME_REAL',
-            color='CATEGORIA_PRINCIPAL',
-            template=get_plotly_template()
+            color='DIVERGENCIA',
+            color_continuous_scale='RdYlGn_r',
+            template=get_plotly_template(),
+            hover_data=['CATEGORIA_PRINCIPAL', 'DIVERGENCIA']
         )
+        
+        max_val = scatter_df['VOLUME_LIDO'].max() * 1.1 if scatter_df['VOLUME_LIDO'].max() > 0 else 100
         fig_scatter.add_shape(
-            type='line', x0=0, y0=0,
-            x1=scatter_df['VOLUME_LIDO'].max() * 1.1 if scatter_df['VOLUME_LIDO'].max() > 0 else 100,
-            y1=scatter_df['VOLUME_LIDO'].max() * 1.1 if scatter_df['VOLUME_LIDO'].max() > 0 else 100,
-            line=dict(color=COR_CRITICO, dash='dash')
+            type='line', x0=0, y0=0, x1=max_val, y1=max_val,
+            line=dict(color='#E74C3C', dash='dash', width=2),
+            name='LIDO = REAL'
         )
-        fig_scatter.update_layout(height=350)
+        
+        fig_scatter.update_layout(
+            height=350,
+            coloraxis_colorbar=dict(title="Divergência"),
+            font=dict(color='#E0E0E0')
+        )
         st.plotly_chart(fig_scatter, width='stretch')
         if zoom:
-            st.caption(f"Mostrando registros até P95 ({p95:.0f} m³). Desmarque para ver todos.")
+            st.caption(f"📌 Linha vermelha: LIDO = REAL. Pontos à esquerda = economia pode estar sendo beneficiada. Mostrando até P95 ({p95:.0f} m³).")
 
     with col_t2:
         st.markdown("**Contagem por Tipo de Anomalia**")
@@ -70,15 +82,29 @@ def render(df):
         }
         tipo_df = pd.DataFrame(tipo_data)
         tipo_df = tipo_df[tipo_df['Qtd'] > 0]
-        cores_bar = [COR_CRITICO, COR_CRITICO, COR_ALERTA, COR_CRITICO][:len(tipo_df)]
+        tipo_df = tipo_df.sort_values('Qtd', ascending=False)
+        
+        cores_barra = {
+            'Anomalia de Leitura (LIDO > REAL)': '#E74C3C',
+            'Sem Hidrômetro (Ativa)': '#E74C3C',
+            'Outlier Extremo': '#F39C12',
+            'Consumo Implausível': '#E74C3C'
+        }
+        cores = [cores_barra.get(t, '#95A5A6') for t in tipo_df['Tipo']]
 
         fig_bar = px.bar(
             tipo_df, x='Tipo', y='Qtd',
             template=get_plotly_template(),
-            color='Tipo', color_discrete_sequence=cores_bar
+            color='Tipo',
+            color_discrete_sequence=cores
         )
-        fig_bar.update_layout(showlegend=False, height=350)
-        fig_bar.update_xaxes(title_text="")
+        fig_bar.update_traces(hovertemplate='<b>%{x}</b><br>Qtd: %{y:,}<extra></extra>')
+        fig_bar.update_layout(
+            showlegend=False,
+            height=350,
+            xaxis=dict(title=""),
+            font=dict(color='#E0E0E0')
+        )
         st.plotly_chart(fig_bar, width='stretch')
 
     st.divider()
@@ -89,11 +115,26 @@ def render(df):
                    if c in anom_df.columns]
     table_df = anom_df[display_cols].head(100).copy()
     col_config = {
-        "FLAG_ANOMALIA_LEITURA": st.column_config.CheckboxColumn("Anomalia de Leitura"),
-        "FLAG_OUTLIER_EXTREMO": st.column_config.CheckboxColumn("Outlier Extremo"),
+        "FLAG_ANOMALIA_LEITURA": st.column_config.CheckboxColumn("Anomalia"),
+        "FLAG_OUTLIER_EXTREMO": st.column_config.CheckboxColumn("Outlier"),
+        "SCORE_PRIORIDADE": st.column_config.NumberColumn("Score", format="%d")
     }
+    
+    def colorize_score(row):
+        score = row.get('SCORE_PRIORIDADE', 0)
+        if pd.isna(score):
+            return [''] * len(row)
+        if score >= 100:
+            return ['background-color: #2D1F1F; color: #E74C3C'] * len(row)
+        elif score >= 50:
+            return ['background-color: #2D2A1A; color: #F39C12'] * len(row)
+        else:
+            return [''] * len(row)
+    
     if len(table_df) > 50:
         page = st.number_input("Página", 1, max(1, (len(table_df) - 1) // 50 + 1), 1, key="anom_page")
         start = (page - 1) * 50
         table_df = table_df.iloc[start:start + 50]
-    st.dataframe(table_df, width='stretch', height=400, column_config=col_config)
+    
+    styled_df = table_df.style.map(colorize_score, subset=['SCORE_PRIORIDADE'])
+    st.dataframe(styled_df, width='stretch', height=400, column_config=col_config)

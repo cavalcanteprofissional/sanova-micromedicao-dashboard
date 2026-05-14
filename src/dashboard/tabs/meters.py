@@ -89,13 +89,31 @@ def render(df):
          'IDADE_HIDRO_ANOS', 'VOLUME_FATURADO', 'VALOR_TOTAL', 'Receita_Potencial_Submed']
     ].sort_values('IDADE_HIDRO_ANOS', ascending=False)
 
+    col_config = {
+        "IDADE_HIDRO_ANOS": st.column_config.NumberColumn("Idade (anos)", format="%.1f"),
+        "VOLUME_FATURADO": st.column_config.NumberColumn("Volume (m³)", format="%.0f"),
+        "VALOR_TOTAL": st.column_config.NumberColumn("Valor (R$)", format="R$ %.2f"),
+        "Receita_Potencial_Submed": st.column_config.NumberColumn("Receita Potencial (R$)", format="R$ %.2f")
+    }
+    
+    def colorize_idade(row):
+        idade = row.get('IDADE_HIDRO_ANOS', 0)
+        if idade >= 8:
+            return ['background-color: #2D1F1F; color: #E74C3C'] * len(row)
+        elif idade >= 5:
+            return ['background-color: #2D2A1A; color: #F39C12'] * len(row)
+        else:
+            return [''] * len(row)
+    
     if len(sub_table) > 50:
         page = st.number_input("Página", 1, max(1, (len(sub_table) - 1) // 50 + 1), 1, key="meters_page")
         start = (page - 1) * 50
         sub_table_page = sub_table.iloc[start:start + 50]
     else:
         sub_table_page = sub_table
-    st.dataframe(sub_table_page, width='stretch', height=400)
+    
+    styled_table = sub_table_page.style.map(colorize_idade, subset=['IDADE_HIDRO_ANOS'])
+    st.dataframe(styled_table, width='stretch', height=400, column_config=col_config)
 
     total_receita_submed = sub_table['Receita_Potencial_Submed'].sum()
     st.markdown(f"**Total de hidrômetros para substituição:** {len(sub_table):,}")

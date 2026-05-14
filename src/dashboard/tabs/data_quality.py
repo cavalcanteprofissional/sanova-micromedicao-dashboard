@@ -134,4 +134,15 @@ def render(df, qm=None):
             miss_by_col.append({'Coluna': col, 'Missing': int(miss), 'Missing (%)': round(miss / len(df) * 100, 1)})
     miss_by_col = sorted(miss_by_col, key=lambda x: x['Missing'], reverse=True)[:10]
     miss_col_df = pd.DataFrame(miss_by_col)
-    st.dataframe(miss_col_df, width='stretch', hide_index=True)
+    
+    def colorize_missing(row):
+        pct = row.get('Missing (%)', 0)
+        if pct > 20:
+            return ['background-color: #2D1F1F; color: #E74C3C'] * len(row)
+        elif pct > 5:
+            return ['background-color: #2D2A1A; color: #F39C12'] * len(row)
+        else:
+            return [''] * len(row)
+    
+    styled_missing = miss_col_df.style.map(colorize_missing, subset=['Missing (%)'])
+    st.dataframe(styled_missing, width='stretch', hide_index=True)

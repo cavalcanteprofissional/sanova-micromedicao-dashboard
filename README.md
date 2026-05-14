@@ -2,7 +2,7 @@
 
 ![Dashboard Preview](thumbnail.png)
 
-**Análise Comercial de Micromedição** —  Dashboard for commercial analysis of sanitation micro-metering data.
+**Análise Comercial de Micromedição** — Dashboard para análise comercial de micromedição de saneamento.
 
 > Desenvolvido por [Lucas Cavalcante](https://cavalcanteprofissional.github.io/portfolio/) | Teste prático para Analista de Dados | SANOVA
 
@@ -10,24 +10,24 @@
 
 ## Sobre Este Projeto
 
-Este trabalho demonstra capacidade de engenharia de dados e analise de sistemas comerciais de saneamento, com foco em **micromedicao, deteccao de anomalias e recuperacao de receita**.
+Este trabalho demonstra capacidade de engenharia de dados e análise de sistemas comerciais de saneamento, com foco em **micromedição, detecção de anomalias e recuperação de receita**.
 
-A SANOVA (sanova.com.br) atua ha quase 15 anos no mercado nacional de saneamento, com mais de 150 clientes impactados. Este projeto aplica esses conhecimentos em um estudo real de dados comerciais de uma concessionaria de saneamento — **1.912 ligacoes** ao longo de **13 meses**.
+A SANOVA (sanova.com.br) atua há quase 15 anos no mercado nacional de saneamento, com mais de 150 clientes impactados. Este projeto aplica esses conhecimentos em um estudo real de dados comerciais de uma concessionária de saneamento — **1.912 ligações** ao longo de **13 meses**.
 
 ---
 
 ## O que Este Dashboard Faz
 
-O dashboard responde perguntas estrategicas sobre o sistema de abastecimento:
+O dashboard responde perguntas estratégicas sobre o sistema de abastecimento:
 
 | Pergunta | Aba |
 |---|---|
-| Quais ligacoes geram/pagam receita? | Visao Geral |
-| Onde ha sinais de fraude? | Anomalias & Fraudes |
+| Quais ligações geram/pagam receita? | Visão Geral |
+| Onde há sinais de fraude? | Anomalias & Fraudes |
 | Quanto custa o consumo zero? | Consumo Zero |
-| Quais hidrometros precisam troca? | Hidrometros |
-| Quanto podemos recuperar de receita? | Recuperacao de Receita |
-| Os dados sao confiaveis? | Qualidade de Dados |
+| Quais hidrômetros precisam troca? | Hidrômetros |
+| Quanto podemos recuperar de receita? | Recuperação de Receita |
+| Os dados são confiáveis? | Qualidade de Dados |
 | Perguntas em linguagem natural? | Chatbot IA |
 
 ---
@@ -53,7 +53,7 @@ flowchart TD
     subgraph DASHBOARD["src/dashboard/"]
         F["load_data.py\n@st.cache_data"]
         G["main.py\nsidebar + filtros"]
-        H["tabs/\n6 abas analiticas"]
+        H["tabs/\n6 abas analíticas"]
         I["chat/\nRAG + Llama-3.1-8B"]
     end
 
@@ -80,14 +80,14 @@ flowchart LR
     CSV["micromedicao_tratado.csv"]
         --> CACHE["@st.cache_data\nload_data"]
         --> FILTERS["Sidebar\nChatbot | Filtros | Toggles"]
-        --> TAB1["Visao Geral"]
+        --> TAB1["Visão Geral"]
         --> PLT1["Plotly KPIs + Area"]
         --> CSV
 
     FILTERS --> TAB2["Anomalias"] --> PLT2["Scatter + Barras"]
     FILTERS --> TAB3["Consumo Zero"] --> PLT3["Histograma"]
-    FILTERS --> TAB4["Hidrometros"] --> PLT4["Pizza + Barras"]
-    FILTERS --> TAB5["Recuperacao"] --> PLT5["Waterfall + Gauge"]
+    FILTERS --> TAB4["Hidrômetros"] --> PLT4["Pizza + Barras"]
+    FILTERS --> TAB5["Recuperação"] --> PLT5["Waterfall + Gauge"]
     FILTERS --> TAB6["Qualidade"] --> PLT6["Heatmap + Tabela"]
     FILTERS -.-> CHAT["Chatbot IA\nRAG + Llama + Memory"]
     CHAT -.-> FILTERS
@@ -116,19 +116,19 @@ dashboard-sanova/
 │   │   ├── utils.py             # Helpers
 │   │   ├── chat/                # Chatbot IA (versão leve)
 │   │   │   ├── __init__.py
-│   │   │   ├── llm.py           # HuggingFace API + contexto
+│   │   │   ├── llm.py           # Cohere API + contexto
 │   │   │   └── app.py           # Interface de chat
 │   │   └── tabs/
 │   │       ├── chat.py          # Wrapper do chatbot
-│   │       ├── overview.py       # KPIs + IQD
-│   │       ├── anomalies.py      # Fraudes + outliers
+│   │       ├── overview.py      # KPIs + IQD
+│   │       ├── anomalies.py     # Fraudes + outliers
 │   │       ├── zero_consumption.py
 │   │       ├── meters.py
 │   │       ├── recovery.py
 │   │       └── data_quality.py
 │   └── etl/
 │       ├── extractor.py
-│       ├── transformer.py        # 10 passos
+│       ├── transformer.py       # 10 passos
 │       ├── loader.py
 │       └── run_pipeline.py
 ├── data/
@@ -145,12 +145,12 @@ dashboard-sanova/
 ```mermaid
 flowchart LR
     XLSX["Excel Fonte\n132 cols"] --> N1["1. Normalizar\nuppercase + acentos"]
-    N1 --> N2["2. Decimal BR\nvirgula -> ponto"]
+    N1 --> N2["2. Decimal BR\nvírgula -> ponto"]
     N2 --> N3["3. Converter\ndatas DD/MM/AAAA"]
-    N3 --> N4["4. Missing cadastral\n82 ligacoes"]
+    N3 --> N4["4. Missing cadastral\n82 ligações"]
     N4 --> N5["5. Missing economias\nfillna(0)"]
     N5 --> N6["6. Missing volumes\nflag preservada"]
-    N6 --> N7["7. Missing valores\n0 para nao-ativos"]
+    N6 --> N7["7. Missing valores\n0 para não-ativos"]
     N7 --> N8["8. Outliers\nP99 + flag"]
     N8 --> N9["9. Enriquecimento\n14 cols calculadas"]
     N9 --> N10["10. Validar\nQ001-Q006"]
@@ -166,7 +166,7 @@ flowchart LR
 
 ## Chatbot IA — Versão Leve (Prompt Engineering)
 
-Assistente de perguntas em linguagem natural sobre os dados de micromedicao. Integrado na sidebar do dashboard.
+Assistente de perguntas em linguagem natural sobre os dados de micromedição. Integrado na barra lateral do dashboard.
 
 > **Nota (13/05/2026):** O chatbot foi reimplementado em versão leve para evitar travamentos. A versão anterior usava RAG com embeddings via API que causava lentidão extrema.
 
@@ -174,13 +174,13 @@ Assistente de perguntas em linguagem natural sobre os dados de micromedicao. Int
 
 ```mermaid
 flowchart TD
-    USER["Usuario envia\npergunta em PT-BR"]
-        --> CTX["get_stats_context(df)\nGera KPIs dinamicos"]
+    USER["Usuário envia\npergunta em PT-BR"]
+        --> CTX["get_stats_context(df)\nGera KPIs dinâmicos"]
         --> PROMPT["SYSTEM_PROMPT\n+ Contexto + Pergunta"]
         --> LLM["Cohere API\ncommand-r7b-12-2024\n128K context"]
         --> RESP["Resposta"]
 
-    DF["DataFrame\n1.912 ligacoes"] --> CTX
+    DF["DataFrame\n1.912 ligações"] --> CTX
 
     style USER fill:#2980B9,color:#fff
     style CTX fill:#16213e,color:#eee
@@ -211,11 +211,11 @@ def get_stats_context(df):
     📊 ESTATÍSTICAS ATUAIS:
     - Total de ligações: {len(df)}
     - Ligações ativas: {ativas}
-    - Faturamento mensal: R$ {fat_mensal:,.2f}
-    - Volume total: {vol_total:,.0f} m³
+    - Faturamento mensal: R$ {faturamento_mensal:,.2f}
+    - Volume total: {volume_total:,.0f} m³
     - Anomalias (LIDO > REAL): {anomalias} casos
     - Consumo zero ativo: {consumo_zero} casos
-    - Hidrômetros > 5 anos: {hidro_velhos} unidades
+    - Hidrômetros > 5 anos: {hidrômetros_velhos} unidades
     - Por categoria: {categorias}
     """
 ```
@@ -236,16 +236,16 @@ COHERE_API_KEY=seu_token_aqui
 
 ```mermaid
 flowchart TD
-    subgraph INPUT["1. Usuario envia mensagem"]
+    subgraph INPUT["1. Usuário envia mensagem"]
         A1["st.chat_input"]
         A2["session_state[chat_messages] += user"]
     end
 
     subgraph PROCESS["2. Processamento"]
-        B1["get_stats_context(df)\nKPIs dinamicos"]
+        B1["get_stats_context(df)\nKPIs dinâmicos"]
         B2["get_llm() → session_state\nCache do LLM"]
         B3["perguntar()\nprompt + contexto"]
-        B4["HuggingFace API\nPhi-3-mini-4k-instruct\n30s timeout"]
+        B4["Cohere API\ncommand-r7b-12-2024\n90s timeout"]
     end
 
     subgraph OUTPUT["3. Resposta"]
@@ -262,7 +262,7 @@ flowchart TD
     style OUTPUT fill:#1a3a2e,color:#eee
 ```
 
-### Features
+### Recursos
 
 **Cache via session_state:**
 - `session_state["chat_llm"]` — instância do LLM (uma única vez por sessão)
@@ -277,17 +277,17 @@ flowchart TD
 
 ---
 
-## Oportunidades de Recuperacao de Receita
+## Oportunidades de Recuperação de Receita
 
 ```mermaid
 flowchart LR
-    A["Hidrometros > 5 anos\n414 ligacoes\nR$ 1.87M"]
-    B["Vistoriar sem consumo 6m+\n224 ligacoes\nR$ 120k"]
-    C["Fraude (LIDO > REAL)\n144 ligacoes\nR$ 144k"]
-    D["Sem hidrometro\n1 ligacao\nR$ 1k"]
-    E["Receita perdida (missing)\n—\nR$ 362k"]
+    A["Hidrômetros > 5 anos\n414 ligações\nR$ 1,87M"]
+    B["Vistoriar sem consumo 6m+\n224 ligações\nR$ 120 mil"]
+    C["Fraude (LIDO > REAL)\n144 ligações\nR$ 144 mil"]
+    D["Sem hidrômetro\n1 ligação\nR$ 1 mil"]
+    E["Receita perdida (missing)\n—\nR$ 362 mil"]
 
-    A --> TOTAL["Total\n~R$ 2.5M"]
+    A --> TOTAL["Total\n~R$ 2,5M"]
     B --> TOTAL
     C --> TOTAL
     D --> TOTAL
@@ -305,18 +305,18 @@ flowchart LR
 
 ## Abas do Dashboard
 
-| Aba | Conteudo | Principais Graficos |
+| Aba | Conteúdo | Principais Gráficos |
 |---|---|---|
-| **Visao Geral** | KPIs + IQD + distribuicao | Area temporal, pizza, barras |
-| **Anomalias & Fraudes** | Deteccao LIDO > REAL, outliers | Scatter, barras, tabela priorizada |
-| **Consumo Zero** | Perda por tarifa minima | Histograma, barras |
-| **Hidrometros** | Tipo, marca, idade, substituicao | Pizza, barras, tabela por idade |
-| **Recuperacao de Receita** | Potencial por acao, waterfall | Waterfall, gauge, tabela priorizada |
-| **Qualidade de Dados** | IQD, missing, inconsistencias | Heatmap, tabela |
+| **Visão Geral** | KPIs + IQD + distribuição | Área temporal, pizza, barras |
+| **Anomalias & Fraudes** | Detecção LIDO > REAL, outliers | Scatter, barras, tabela priorizada |
+| **Consumo Zero** | Perda por tarifa mínima | Histograma, barras |
+| **Hidrômetros** | Tipo, marca, idade, substituição | Pizza, barras, tabela por idade |
+| **Recuperação de Receita** | Potencial por ação, waterfall | Waterfall, gauge, tabela priorizada |
+| **Qualidade de Dados** | IQD, missing, inconsistências | Heatmap, tabela |
 
 ---
 
-## Stack Tecnologica
+## Stack Tecnológica
 
 | Camada | Tecnologia |
 |---|---|
@@ -346,7 +346,7 @@ O dashboard passou por uma reestruturação visual completa com foco em **dark m
 
 ### Componentes Melhorados
 
-- **KPI Cards**: Borda colorida por status, hover effect, container flex
+- **KPI Cards**: Borda colorida por status, efeito hover, container flex
 - **Gráficos**: Cores semânticas (não automáticas), tooltips informativos
 - **Tabelas**: Linhas coloridas por criticidade (vermelho = crítico, laranja = atenção)
 - **Sidebar**: Seções organizadas, contadores com badges coloridos
@@ -368,20 +368,20 @@ O dashboard passou por uma reestruturação visual completa com foco em **dark m
 ### Local (Poetry)
 
 ```bash
-# 1. Instalar dependencias
+# 1. Instalar dependências
 poetry install
 
-# 2. Pipeline ETL (so se precisar reprocessar)
+# 2. Pipeline ETL (somente se precisar reprocessar)
 python src/etl/run_pipeline.py
 
 # 3. Chatbot (opcional): configurar COHERE_API_KEY em .env.local
-#   Veja secao "Chatbot IA Generativa com RAG" acima.
+#   Veja seção "Chatbot IA" acima.
 
 # 4. Abrir dashboard
 poetry run streamlit run src/dashboard/main.py
 ```
 
-Dashboard disponible em `http://localhost:8501`.
+Dashboard disponível em `http://localhost:8501`.
 
 ### Codespaces / Venv Externo
 
@@ -389,7 +389,7 @@ Dashboard disponible em `http://localhost:8501`.
 # Ativar ambiente virtual primeiro
 source .venv/bin/activate
 
-# Instalar deps (se necessario)
+# Instalar dependências (se necessário)
 pip install poetry
 poetry install
 
@@ -398,7 +398,7 @@ streamlit run src/dashboard/main.py
 ```
 
 > Se executar sem Poetry/venv ativo, o dashboard ajusta o `sys.path` automaticamente.
-> O `HF_TOKEN` deve estar em `.env.local` para uso local, ou nos Secrets do Streamlit Cloud para deploy.
+> O `COHERE_API_KEY` deve estar em `.env.local` para uso local, ou nos Secrets do Streamlit Cloud para deploy.
 
 ---
 

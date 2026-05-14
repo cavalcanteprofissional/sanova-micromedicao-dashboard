@@ -1,8 +1,10 @@
-# sanova-micromedicao-dashboard
+# SANOVA – Soluções para Gestão da Água
 
-**Dashboard de Analise Comercial de Micromedicao** — Streamlit dashboard for commercial analysis of sanitation micro-metering data.
+![Dashboard Preview](thumbnail.png)
 
-> Teste pratico para Analista de Dados | SANOVA — Inovacao em Saneamento
+**Análise Comercial de Micromedição** — Streamlit dashboard for commercial analysis of sanitation micro-metering data.
+
+> Desenvolvido por [Lucas Cavalcante](https://cavalcanteprofissional.github.io/portfolio/) | Teste prático para Analista de Dados | SANOVA — Inovação em Saneamento
 
 ---
 
@@ -327,6 +329,40 @@ flowchart LR
 
 ---
 
+## Melhorias UI/UX (Maio/2026)
+
+O dashboard passou por uma reestruturação visual completa com foco em **dark mode** e **cores semânticas**:
+
+### Paleta de Cores
+
+| Status | Cor | Uso |
+|--------|-----|-----|
+| INFO | `#2980B9` | Azul — Informativo |
+| ATIVO | `#1ABC9C` | Verde água — Ligações ativas |
+| SUCESSO | `#27AE60` | Verde — Dentro do esperado |
+| ALERTA | `#F39C12` | Laranja — Atenção |
+| CRÍTICO | `#E74C3C` | Vermelho — Ação necessária |
+| NEUTRO | `#95A5A6` | Cinza — Inativos |
+
+### Componentes Melhorados
+
+- **KPI Cards**: Borda colorida por status, hover effect, container flex
+- **Gráficos**: Cores semânticas (não automáticas), tooltips informativos
+- **Tabelas**: Linhas coloridas por criticidade (vermelho = crítico, laranja = atenção)
+- **Sidebar**: Seções organizadas, contadores com badges coloridos
+- **Heatmaps**: Escala RdYlGn_r para destacar valores altos (vermelho)
+
+### Diferença entre Métricas
+
+| Local | Nome | Componentes |
+|-------|------|-------------|
+| **Sidebar** | Casos técnicos | Anomalia de leitura + Outliers extremos |
+| **Overview** | Casos comerciais | Anomalia de leitura + Consumo Zero |
+
+> Essa distinção foi criada para separar problemas técnicos (dados inconsistentes) de problemas comerciais (consumo anormal).
+
+---
+
 ## Como Executar
 
 ### Local (Poetry)
@@ -366,16 +402,40 @@ streamlit run src/dashboard/main.py
 
 ---
 
-## Premissas Tecnicas
+## Premissas Técnicas e Metodologia
 
 | Premissa | Valor | Fonte |
 |---|---|---|
-| Tarifa minima | R$ 89,03 | Menor VALOR_TOTAL observado |
-| Custo unitario da agua | R$ 10/m³ | Estimativa |
+| Tarifa mínima | R$ 89,03 | Menor VALOR_TOTAL observado (~10m³) — validar com concessionária |
+| Custo unitário água | R$ 10/m³ | Estimativa — custo operacional médio |
 | Fator de submedição (> 5 anos) | 15% | ABNT NBR 15538 |
-| Anomalia de leitura | LIDO > REAL + 1 m³ | Critério de fraude |
-| Outlier extremo | P99 | Metodo estatistico |
+| Anomalia de leitura | LIDO > REAL + 1 m³ | Critério empírico |
+| Consumo crônico zero | ≥ 6 meses | Padrão do setor |
+| Score de Prioridade | Pesos empíricos | Ver detalhe abaixo |
+
+### Score de Prioridade (Metodologia)
+
+O score é calculado com pesos definidos empiricamente:
+
+| Flag | Peso | Justificativa |
+|------|------|----------------|
+| Anomalia de leitura | 50 | Alto impacto em receita |
+| Sem hidrômetro (ativa) | 40 | Sem medição = sem controle |
+| Consumo zero ativo | 30 | Possível perda de receita |
+| 3+ meses consumo zero | 20 | Padrão crônico |
+| Hidrômetro > 5 anos | 10 | Submedição gradual |
+
+> ⚠️ *Os pesos são ajustáveis conforme validação de campo. Esta metodologia foi documentada no expander "Premissas e Metodologia" do dashboard.*
+
+### Limitações dos Dados
+
+- Marcas de hidrômetro anonimizadas (A–F) — sem correlação com fabricante
+- Endereços não disponíveis — análise geoespacial não aplicável
+- Consumidores industriais podem gerar falsos positivos em "consumo implausível"
+- Valores de recuperação são estimativas conservadoras
 
 ---
 
-*Desenvolvido como teste pratico para Analista de Dados — SANOVA (sanova.com.br) | Palhoca/SC | 2026*
+**SANOVA – Soluções para Gestão da Água** | [sanova.com.br](https://sanova.com.br)
+
+*Desenvolvido por [Lucas Cavalcante](https://cavalcanteprofissional.github.io/portfolio/) | Palhoça/SC | Maio 2026*

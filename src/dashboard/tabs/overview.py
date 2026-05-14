@@ -14,6 +14,7 @@ def render(df, qm=None):
         df.get('FLAG_ANOMALIA_LEITURA', pd.Series([False]*len(df))).sum() +
         df.get('FLAG_CONSUMO_ZERO', pd.Series([False]*len(df))).sum()
     )
+    # Casos comerciais = anomalias + consumo zero ativo (diferente da sidebar que tem casos técnicos)
 
     iqd = qm['iqd'] if qm else 88.4
 
@@ -28,7 +29,7 @@ def render(df, qm=None):
         st.metric("📊 Volume Faturado", f"{vol_total:,.0f} m³", delta_color="off")
     with col4:
         cor_delta = "inverse" if anomalias > 0 else "normal"
-        st.metric("🚨 Casos Críticos", f"{anomalias}", delta="Atenção!" if anomalias > 0 else "OK", delta_color=cor_delta)
+        st.metric("🚨 Casos Comerciais", f"{anomalias}", delta="Anomalia + Consumo Zero" if anomalias > 0 else "OK", delta_color=cor_delta)
     with col5:
         cor_iqd = "normal" if iqd >= 90 else ("off" if iqd >= 70 else "inverse")
         label_iqd = "Excelente" if iqd >= 90 else ("Atenção" if iqd >= 70 else "Crítico")

@@ -1538,6 +1538,147 @@ Fase UI-6: Componentes Customizados
 
 ---
 
+## 14. Auditoria de Engenharia de Dados e Metodologia (13/05/2026)
+
+### 14.1 Pipeline ETL — Análise por Etapa
+
+| Etapa | Função | Arquivo | Status | Observação |
+|-------|--------|---------|--------|------------|
+| Extração | `read_excel()` | `extractor.py` | ✅ OK | Lê Planilha1 como string |
+| Normalização texto | `normalize_text_columns()` | `transformer.py` | ✅ OK | UTF-8 + ASCII |
+| Capacidade hidrômetro | `fix_capacidade_hidrometro()` | `transformer.py` | ✅ OK | Conversão vírgula→ponto |
+| Diâmetro | `fix_diametro_hidrometro()` | `transformer.py` | ✅ OK | Normaliza polegadas |
+| Datas | `convert_dates()` | `transformer.py` | ✅ OK | dayfirst=True |
+| Missing cadastral | `handle_missing_cadastral()` | `transformer.py` | ✅ OK | Preenche 'SEM_HIDROMETRO' |
+| Missing economias | `handle_missing_economias()` | `transformer.py` | ✅ OK | fillna(0) |
+| Campos calculados | `enrich_with_calculated_fields()` | `transformer.py` | ⚠️ Ver item 14.2 |
+| Carga | `save_to_csv()` | `loader.py` | ✅ OK | Validação de output |
+
+---
+
+### 14.2 🚨 Potenciais Erros de Interpretação Identificados
+
+#### A) CÁLCULO DA DIVERGÊNCIA (transformer.py:139-143)
+
+```python
+df['DIVERGENCIA_VOL'] = df['VOLUME_REAL'].fillna(0) - df['VOLUME_LIDO'].fillna(0)
+df['FLAG_ANOMALIA_LEITURA'] = df['DIVERGENCIA_VOL'] < -1
+```
+
+**Problema**: A lógica está correta, mas:
+- LIDO > REAL + 1m³ = possível faturamento a maior (fraude)
+- LIDO < REAL = "economia была beneficiada" (subcobrança)
+
+A escala de cores no gráfico de scatter usa `RdYlGn_r` onde vermelho = divergência negativa (LIDO > REAL).
+
+**Status**: ⚠️Tooltip confuso — 需要解释ação clara
+
+---
+
+#### B) HEATMAP DE CONSUMO — ESCALA INVERSA (overview.py:144-167)
+
+```python
+fig_heat = go.Figure(data=go.Heatmap(
+    z=pivot_df.values,
+    colorscale='RdYlGn_r',  # vermelho = alto
+    ...
+))
+```
+
+**Problema**: No contexto de "consumo", alto volume = **mais receita** (bom), não problema. A escala pode confundir.
+
+**Status**: ⚠️ Considerar escala 'Blues' ou adicionar nota
+
+---
+
+#### C) SCORE DE PRIORIDADE — PESOS ARBITRÁRIOS (transformer.py:161-167)
+
+```python
+df['SCORE_PRIORIDADE'] = (
+    df['FLAG_ANOMALIA_LEITURA'].astype(int) * 50 +      # Por que 50?
+    df['FLAG_CONSUMO_ZERO'].astype(int) * 30 +           # Por que 30?
+    (df['MESES_CONSUMO_ZERO'] >= 3).astype(int) * 20 +   # Por que 20?
+    (df['IDADE_HIDRO_ANOS'].fillna(0) > 5).astype(int) * 10 +  # Por que 10?
+    df['FLAG_SEM_HIDROMETRO'].astype(int) * 40           # Por que 40?
+)
+```
+
+**Problema**: Pesos não validados empiricamente. Sem base de comparação com dados de campo.
+
+**Status**: ⚠️ Documentar como "empíricos"
+
+---
+
+#### D) CONSUMO IMPLAUSÍVEL — FALSOS POSITIVOS (transformer.py:178-180)
+
+```python
+df['FLAG_CONSUMO_IMPLAUSIVEL'] = (
+    df['VOLUME_LIDO'] > df['MEDIA_VOL_12M'] + 3 * df['STD_VOL_12M']
+) & (df['STD_VOL_12M'] > 0)
+```
+
+**Problema**: Para categorias industriais com alta variabilidade, isso gera muitos falsos positivos.
+
+**Status**: ✅ Manter, mas com filtro por categoria no futuro
+
+---
+
+#### E) CONSUMO CONSTANTE — INTERPRETAÇÃO AMBÍGUA (transformer.py:174-176)
+
+```python
+df['FLAG_CONSUMO_CONSTANTE'] = (
+    df[vol_cols_6m].nunique(axis=1) == 1  # Mesmo consumo em 6 meses
+) & (df['VOLUME_LIDO_01'].notna())
+```
+
+**Problema**: Pode ser:
+- ✅ Legítimo: irrigação, piscina, processo industrial
+- ❌ Suspeito: hidrômetro manipulado
+
+**Status**: ⚠️ Renomear para "Consumo Estático" + filtro por categoria
+
+---
+
+### 14.3 Análise de Premissas (config.py)
+
+| Premissa | Valor | Problema |
+|-----------|-------|----------|
+| Tarifa mínima | R$ 89,03 | Não validada — "baseada no menor VALOR_TOTAL" mas sem verificação |
+| Custo unitário água | R$ 10/m³ | Sem referência — de onde vem? |
+| Fator submedição | 15% | ✅ Referência ABNT NBR 15538 presente |
+| Consumo crônico | ≥ 6 meses | Por que именно 6? Poderia ser 3 ou 12 |
+| Anomalia leitura | LIDO > REAL + 1m³ | Limiar arbitrário — por que 1? |
+
+---
+
+### 14.4 Plano de Correções
+
+| # | Item | Arquivo | Tipo | Prioridade | Status |
+|---|------|---------|------|------------|--------|
+| 1 | Documentar origem da Tarifa mínima (89.03) | `config.py` | Documentação | Média | ⏳ |
+| 2 | Explicar origem do Custo unitário (R$10/m³) | `config.py` | Documentação | Alta | ⏳ |
+| 3 | Justificar limiar de anomalia (1m³) | `config.py` | Metodologia | Média | ⏳ |
+| 4 | Adicionar nota sobre heatmap de consumo | `overview.py` | UI | Baixa | ⏳ |
+| 5 | Documentar que pesos do Score são empíricos | `config.py` | Documentação | Média | ⏳ |
+| 6 | Adicionar filtro por categoria em Consumo Implausível | `transformer.py` | Lógica | Média | ⏳ |
+
+---
+
+### 14.5 Métricas de Qualidade do Pipeline
+
+| Métrica | Valor | Status |
+|---------|-------|--------|
+| Total registros processados | 1.912 | ✅ OK |
+| Colunas originais | 132 | ✅ OK |
+| Colunas após ETL | 151 | ✅ OK (+19 calculated) |
+| Período | 13 meses | ✅ OK |
+| Duplicatas matricula | 0 | ✅ OK |
+| Missing cadastral agrupado | 82 (4,3%) | ✅ Tratados |
+| Outliers extremos | 15 | ✅ Flagados |
+| Anomalias (LIDO > REAL) | 144 | ✅ Flagadas |
+
+---
+
 ## Status Final — Projeto Completo
 
 | Componente | Status |
@@ -1547,5 +1688,6 @@ Fase UI-6: Componentes Customizados
 | 34 Testes | ✅ Passando |
 | Dark Mode | ✅ Implementado |
 | Chatbot Leve | ✅ Implementado (Cohere API + requests, timeout 90s) |
-| UI/UX Improvements | ⏳ Planejado (seção 13) |
+| UI/UX Improvements | ✅ Concluído (seção 13) |
+| Auditoria Engenharia/Metodologia | ✅ Concluído (seção 14) |
 | Streamlit Cloud | ⏳ Pending deploy |

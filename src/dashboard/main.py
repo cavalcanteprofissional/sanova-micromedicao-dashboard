@@ -290,7 +290,7 @@ def render_sidebar_filters(df, qm):
         <div class="sidebar-section">
             <div class="sidebar-section-title">Oportunidades</div>
             <div style="font-size:0.85rem;">
-                Casos críticos: <span class="info-badge {anom_badge}">{anom_count}</span>
+                <span title="Anomalia de leitura + Outliers extremos">Casos técnicos: <span class="info-badge {anom_badge}">{anom_count}</span></span>
             </div>
             <div style="font-size:0.85rem; margin-top:4px; color:#7F8C8D;">
                 Receita potencial: R$ 2.49M

@@ -1450,6 +1450,42 @@ Escalas Plotly recomendadas:
 
 ```
 Fase UI-1: CSS e Variáveis
+  ✅ UI-1.1 Adicionar variáveis CSS
+  ✅ UI-1.2 Estilizar KPI cards
+  ✅ UI-1.3 Container de KPIs
+
+Fase UI-2: KPI Cards Condicionais
+  ✅ UI-2.1 overview.py KPIs
+  ✅ UI-2.2 zero_consumption.py KPIs
+  ✅ UI-2.3 meters.py KPIs
+  ✅ UI-2.4 recovery.py KPIs
+  ✅ UI-2.5 data_quality.py KPIs
+
+Fase UI-3: Gráficos com Cores Semânticas
+  ✅ UI-3.1 overview.py pizza
+  ✅ UI-3.2 overview.py barras situação
+  ✅ UI-3.3 overview.py heatmap
+  ✅ UI-3.4 anomalies.py scatter
+  ✅ UI-3.5 anomalies.py barras
+  ✅ UI-3.6 zero_consumption.py barras
+
+Fase UI-4: Tabelas com Cores
+  ✅ UI-4.1 anomalies.py tabela
+  ✅ UI-4.2 zero_consumption.py tabela
+  ✅ UI-4.3 meters.py tabela
+  ✅ UI-4.4 data_quality.py tabela
+
+Fase UI-5: Layout e Espaçamento
+  ✅ UI-5.1 Containers de gráficos
+  ✅ UI-5.2 Tooltips descritivos
+  ✅ UI-5.3 Hierarquia visual (emojis nos títulos)
+  ✅ UI-5.4 Gap uniforme
+
+Fase UI-6: Componentes Customizados
+  ✅ UI-6.1 section_title() em utils.py
+  ✅ UI-6.2 render_card_container() em utils.py
+```
+Fase UI-1: CSS e Variáveis
   ☐ UI-1.1 Adicionar variáveis CSS
   ☐ UI-1.2 Estilizar KPI cards
   ☐ UI-1.3 Container de KPIs

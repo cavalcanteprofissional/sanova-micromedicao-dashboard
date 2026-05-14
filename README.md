@@ -55,17 +55,16 @@ flowchart TD
         I["chat/\nRAG + Llama-3.1-8B"]
     end
 
-    subgraph CHATBOT["Chatbot IA (sob demanda)"]
-        J["knowledge_base.py\nChunks estaticos + dinamicos"]
-        K["rag_pipeline.py\nEmbeddings + RAG + Memory"]
-        L["llm_config.py\nHuggingFace Inference Providers"]
+    subgraph CHATBOT["Chatbot IA (versão leve)"]
+        J["chat/llm.py\nAPI HuggingFace + Contexto"]
+        K["chat/app.py\nInterface Streamlit"]
     end
 
     A --> B --> C --> D --> E
     E --> F --> G
     G --> H
     G --> I
-    I --> J --> K --> L
+    I --> J --> K
 
     style RAW fill:#1a1a2e,color:#eee
     style ETL fill:#16213e,color:#eee
@@ -113,11 +112,12 @@ dashboard-sanova/
 │   │   ├── load_data.py         # @st.cache_data
 │   │   ├── config.py            # Premissas
 │   │   ├── utils.py             # Helpers
-│   │   ├── chat/                # Chatbot IA
-│   │   │   ├── llm_config.py    # HuggingFace LLM
-│   │   │   ├── rag_pipeline.py  # Embeddings + RAG
-│   │   │   └── knowledge_base.py # Base de conhecimento
+│   │   ├── chat/                # Chatbot IA (versão leve)
+│   │   │   ├── __init__.py
+│   │   │   ├── llm.py           # HuggingFace API + contexto
+│   │   │   └── app.py           # Interface de chat
 │   │   └── tabs/
+│   │       ├── chat.py          # Wrapper do chatbot
 │   │       ├── overview.py       # KPIs + IQD
 │   │       ├── anomalies.py      # Fraudes + outliers
 │   │       ├── zero_consumption.py
@@ -162,40 +162,116 @@ flowchart LR
 
 ---
 
-## Chatbot IA Generativa com RAG
+## Chatbot IA — Versão Leve (Prompt Engineering)
 
 Assistente de perguntas em linguagem natural sobre os dados de micromedicao. Integrado na sidebar do dashboard.
 
+> **Nota (13/05/2026):** O chatbot foi reimplementado em versão leve para evitar travamentos. A versão anterior usava RAG com embeddings via API que causava lentidão extrema.
+
+### Arquitetura Nova (Sem RAG)
+
 ```mermaid
 flowchart TD
-    Q["Pergunta do usuario\n(em PT-BR)"]
-        --> EMB["Embedding\nHuggingFace Inference API\nparaphrase-multilingual-MiniLM"]
-        --> VEC["SimpleVectorStore\n(top-4 chunks, cosine similarity)"]
-        --> LLM["meta-llama/Llama-3.1-8B\nHuggingFace Inference API"]
-        --> A["Resposta\n+ Memoria (k=5)"]
+    USER["Usuario envia\npergunta em PT-BR"]
+        --> CTX["get_stats_context(df)\nGera KPIs dinamicos"]
+        --> PROMPT["SYSTEM_PROMPT\n+ Contexto + Pergunta"]
+        --> LLM["Cohere API\ncommand-r7b-12-2024\n128K context"]
+        --> RESP["Resposta"]
 
-    KB1["Camada Estatica\nknowledge_base.py\n10 chunks tematicos"] --> VEC
-    KB2["Camada Dinamica\ngenerate_dynamic_stats(df)\nestatisticas reais"] --> VEC
+    DF["DataFrame\n1.912 ligacoes"] --> CTX
 
-    style Q fill:#2980B9,color:#fff
-    style EMB fill:#16213e,color:#eee
-    style VEC fill:#16213e,color:#eee
+    style USER fill:#2980B9,color:#fff
+    style CTX fill:#16213e,color:#eee
+    style PROMPT fill:#16213e,color:#eee
     style LLM fill:#27AE60,color:#fff
-    style A fill:#1a1a2e,color:#eee
-    style KB1,KB2 fill:#0f3460,color:#eee
+    style RESP fill:#1a1a2e,color:#eee
 ```
 
-### Configuracao do Chatbot
+### Diferenças: Versão Pesada vs Leve
 
-1. Crie conta em [huggingface.co](https://huggingface.co)
-2. Gere um Access Token (tipo **Fine-grained**, permissoes **Inference > Make calls to serverless Inference API**)
+| Componente | Antes (RAG) | Depois (Leve) |
+|------------|--------------|--------------|
+| Provider | HuggingFace | **Cohere** |
+| Modelo | Phi-3-mini (problemas) | **command-r7b-12-2024** |
+| API | InferenceClient (lento) | **Cohere Client** |
+| Embeddings | sentence-transformers (API) | **Removido** |
+| Vector Store | FAISS/InMemoryVectorStore | **Removido** |
+
+**Resultado:** ~66 packages no lock (antes: 126+), sem LangChain, sem travamentos.
+
+### Contexto Dinâmico dos Dados
+
+O chatbot inclui KPIs reais do DataFrame injetados no prompt:
+
+```python
+def get_stats_context(df):
+    return f"""
+    📊 ESTATÍSTICAS ATUAIS:
+    - Total de ligações: {len(df)}
+    - Ligações ativas: {ativas}
+    - Faturamento mensal: R$ {fat_mensal:,.2f}
+    - Volume total: {vol_total:,.0f} m³
+    - Anomalias (LIDO > REAL): {anomalias} casos
+    - Consumo zero ativo: {consumo_zero} casos
+    - Hidrômetros > 5 anos: {hidro_velhos} unidades
+    - Por categoria: {categorias}
+    """
+```
+
+### Configuração
+
+1. Crie conta em [cohere.com](https://cohere.com) (gratuito)
+2. Gere uma API Key em https://dashboard.cohere.com/
 3. Edite `.env.local`:
 
 ```bash
-HF_TOKEN=hf_your_token_here
+COHERE_API_KEY=seu_token_aqui
 ```
 
-> Custo: gratuito — $0.10/mes em credits HF (centenas de perguntas).
+> Custo: gratuito — plano trial com chamadas disponíveis.
+
+### Fluxo de Execução
+
+```mermaid
+flowchart TD
+    subgraph INPUT["1. Usuario envia mensagem"]
+        A1["st.chat_input"]
+        A2["session_state[chat_messages] += user"]
+    end
+
+    subgraph PROCESS["2. Processamento"]
+        B1["get_stats_context(df)\nKPIs dinamicos"]
+        B2["get_llm() → session_state\nCache do LLM"]
+        B3["perguntar()\nprompt + contexto"]
+        B4["HuggingFace API\nPhi-3-mini-4k-instruct\n30s timeout"]
+    end
+
+    subgraph OUTPUT["3. Resposta"]
+        C1["session_state[chat_response]"]
+        C2["st.rerun()"]
+        C3["st.chat_message"]
+    end
+
+    A1 --> A2 --> PROCESS
+    B3 --> B4 --> OUTPUT
+
+    style INPUT fill:#1a1a2e,color:#eee
+    style PROCESS fill:#0f3460,color:#eee
+    style OUTPUT fill:#1a3a2e,color:#eee
+```
+
+### Features
+
+**Cache via session_state:**
+- `session_state["chat_llm"]` — instância do LLM (uma única vez por sessão)
+
+**Fallback FAQ:**
+- 9 respostas predefinidas para tópicos conhecidos
+- Ativado automaticamente quando API falha/timeout
+
+**Streamlit Cloud:**
+- `COHERE_API_KEY` configurado nos Secrets do app
+- Fallback automático: env var → .env.local → st.secrets
 
 ---
 
@@ -244,9 +320,10 @@ flowchart LR
 |---|---|
 | **Framework** | Python 3.10+ · Streamlit |
 | **Dados** | Pandas · NumPy · Plotly |
-| **LLM / Chat** | HuggingFace Inference API · Llama-3.1-8B-Instruct |
-| **Embeddings** | HuggingFace Inference API · `paraphrase-multilingual-MiniLM-L12-v2` (384 dims) |
+| **Chatbot** | Cohere API · command-r7b-12-2024 (128K context) · Prompt Engineering |
 | **Gestão** | Poetry · Pytest (34 testes) |
+
+> **Nota:** Chatbot sem LangChain, sem embeddings, sem vector store — arquitetura leve para evitar travamentos.
 
 ---
 
@@ -261,7 +338,7 @@ poetry install
 # 2. Pipeline ETL (so se precisar reprocessar)
 python src/etl/run_pipeline.py
 
-# 3. Chatbot (opcional): configurar HF_TOKEN em .env.local
+# 3. Chatbot (opcional): configurar COHERE_API_KEY em .env.local
 #   Veja secao "Chatbot IA Generativa com RAG" acima.
 
 # 4. Abrir dashboard

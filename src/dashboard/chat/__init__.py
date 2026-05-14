@@ -1,1 +1,1 @@
-# Chat module - IA Generativa com RAG
+# Chat module - chatbot simples com HuggingFace API

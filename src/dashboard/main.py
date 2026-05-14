@@ -183,6 +183,9 @@ def render_sidebar_filters(df, qm):
     with st.sidebar:
         chat.render(df)
 
+        if st.button("🗑️ Limpar conversa", use_container_width=True):
+            chat.clear_conversation()
+
         st.divider()
 
         st.markdown("### Filtros Globais")

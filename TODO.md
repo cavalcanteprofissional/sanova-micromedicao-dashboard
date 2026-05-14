@@ -733,3 +733,556 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 ---
 
 *Documento atualizado em 13/05/2026 — Projeto completo: ETL + Dashboard + 34 testes + Dark Mode + Chatbot RAG (zero deps langchain)*
+
+---
+
+## 12.17 Chatbot — Bugs de Integracao Streamlit (Aberto 13/05/2026)
+
+**Problema:** O chatbot integrado na sidebar nao funciona corretamente em alguns cenários.
+
+### BUG-CHAT-01: Comparacao de identidade do DataFrame (Critico)
+
+**Arquivo:** `src/dashboard/tabs/chat.py:87`
+
+**Codigo problemático:**
+```python
+if chain is None or df_ref is not df:
+```
+
+**Problema:** `df_ref is not df` compara **identidade de objeto Python**, não conteúdo. Como `load_data()` usa `@st.cache_data`, o DataFrame pode ser recriado entre reruns (nova instância de objeto), causando `True` mesmo sem mudança real de dados. Isso força reconstrução do RAG a cada interação do usuário, degradando performance e potencialmente causando loops de rerun.
+
+**Impacto:** Reconstrução desnecessária do índice de embeddings em cada mensagem.
+
+**Correção:** Remover a comparação `df_ref is not df`. O chain fica em `session_state` e é reutilizado até que o usuário clique em "Limpar conversa". O DataFrame serve apenas para gerar estatísticas dinâmicas no `build_rag_chain`.
+
+### BUG-CHAT-02: provider="auto" quebra no Streamlit Cloud (Critico)
+
+**Arquivo:** `src/dashboard/chat/llm_config.py:72`
+
+**Codigo problemático:**
+```python
+response = self._client.chat_completion(
+    model=self.repo_id,
+    messages=[{"role": "user", "content": prompt}],
+    max_tokens=self.max_new_tokens,
+    temperature=self.temperature,
+    provider="auto",  # <-- PROBLEMA
+)
+```
+
+**Problema:** `provider="auto"` usa Inference Providers (sistema de routing gratuito). Sem credits gratuitos disponíveis no Streamlit Cloud, o Inference Providers pode retornar erro de quota ou falha silenciosa. O provider fixo (ex: `hf-inference`) ou omissão garante comportamento consistente.
+
+**Impacto:** Chat falha silenciosamente no Streamlit Cloud mesmo com token válido.
+
+**Correção:** Remover `provider="auto"` ou usar `provider="hf-inference"` explicitamente.
+
+### BUG-CHAT-03: Sem FAQ sugerido (Medio)
+
+**Arquivo:** `src/dashboard/tabs/chat.py`
+
+**Problema:** A SKILL descreve botões de perguntas sugeridas na sidebar, mas `chat.py` não implementa nenhum. O usuário não consegue clicar em perguntas pré-definidas.
+
+**Correção:** Adicionar perguntas sugeridas clicáveis no topo da área do chat.
+
+### BUG-CHAT-04: Sem botao de limpar conversa (Medio)
+
+**Arquivo:** `src/dashboard/tabs/chat.py`
+
+**Problema:** O histórico de chat acumula indefinidamente sem opção de reset. A memória interna do `SimpleConversationalRAG` não tem limite de janela.
+
+**Correção:** Adicionar botão "Limpar conversa" que reseta `chat_messages` e `chat_chain` do session_state.
+
+### BUG-CHAT-05: Sem spinner na resposta (Medio)
+
+**Arquivo:** `src/dashboard/tabs/chat.py:106`
+
+**Problema:** O spinner aparece apenas na construção do chain (linha 89), mas não na geração da resposta em si. O usuário não tem feedback visual durante a chamada ao LLM.
+
+**Correção:** Adicionar `st.spinner()` ao redor da chamada `chain.invoke()`.
+
+### BUG-CHAT-06: DataFrame armazenado por referência no session_state (Baixo)
+
+**Arquivo:** `src/dashboard/tabs/chat.py:68`
+
+**Codigo:**
+```python
+st.session_state["chat_df"] = df
+```
+
+**Problema:** Armazena a referência do DataFrame. Se o DataFrame for recarregado (cache invalidado), a referência fica desatualizada e não causa rebuild automático.
+
+**Correção:** Não armazenar `chat_df` no session_state (já que não é mais usado na comparação).
+
+### BUG-CHAT-07: Imports de chat redundantes no modulo (Baixo)
+
+**Arquivo:** `src/dashboard/chat/rag_pipeline.py:160-161`
+
+**Problema:** `build_rag_chain` importa `get_api_key` dentro da função, mas já está importado para uso. Imports lazy dentro de funções são boas práticas, mas aqui `generate_dynamic_stats` e `get_api_key` podem ser importados no topo.
+
+**Correção:** Mover imports para o topo do modulo para clareza.
+
+---
+
+## 12.18 Chatbot — Plano de Correção (13/05/2026)
+
+| Bug | Prioridade | Status | Arquivo |
+|---|---|---|---|
+| BUG-CHAT-01 Identity comparison | Critica | Aberto | chat.py:87 |
+| BUG-CHAT-02 provider="auto" | Critica | Aberto | llm_config.py:72 |
+| BUG-CHAT-03 Sem FAQ | Media | Aberto | chat.py |
+| BUG-CHAT-04 Sem limpar conversa | Media | Aberto | chat.py |
+| BUG-CHAT-05 Sem spinner na resposta | Media | Aberto | chat.py |
+| BUG-CHAT-06 chat_df por referencia | Baixa | Aberto | chat.py:68 |
+| BUG-CHAT-07 Imports redundantes | Baixa | Aberto | rag_pipeline.py |
+
+---
+
+## 12.19 Chatbot — Correções Aplicadas (13/05/2026)
+
+### chat.py — Reescrito completo
+
+| Correção | Descrição |
+|---|---|
+| Removido `df_ref is not df` | Chain não é mais reconstruído por causa de mudança de identidade do DataFrame. Chain fica em session_state até limpar. |
+| Removido `chat_df` do session_state | Não há mais comparação com `df_ref`, referência do DataFrame não é mais necessária. |
+| Adicionado FAQ questions | 12 perguntas sugeridas clicáveis dentro de `st.expander` na área do chat. |
+| Adicionado `clear_conversation()` | Função exportada que limpa `chat_messages` e `chat_chain` e mostra mensagem de boas-vindas resetada. |
+| Spinner na resposta | `st.spinner("Consultando a base de conhecimento...")` ao redor de `chain.invoke()`. |
+| Imports reorganizados | Imports lazy dentro de funções para evitar crash se modulo não carregar. |
+
+### llm_config.py — provider="auto" removido
+
+| Correção | Descrição |
+|---|---|
+| Removido `provider="auto"` | HuggingFace Inference API agora usa routing default (sem Inference Providers). Comportamento consistente local e Streamlit Cloud. |
+
+### main.py — Botão limpar conversa
+
+| Correção | Descrição |
+|---|---|
+| Adicionado `st.button("🗑️ Limpar conversa")` | Na sidebar, após o `chat.render()`, com ícone de lixeira. Chama `chat.clear_conversation()`. |
+
+**Testes:** 34/34 passando.
+
+**Status:** BUG-CHAT-01 ao BUG-CHAT-05 resolvidos. BUG-CHAT-06 e BUG-CHAT-07 são baixa prioridade e não impactam funcionalidade — mantidos como pendientes para futuras melhorias.
+
+---
+
+## 12.20 Chatbot — Bloqueio do Event Loop Streamlit (Aberto 13/05/2026)
+
+**Sintoma:** Chat não funciona — "Iniciando assistente..." fica travado, aplicação congela completamente.
+
+**Causa Raiz:** O pipeline faz **HTTP calls sequenciais síncronas** dentro do event loop do Streamlit. Cada operação bloqueia o servidor inteiro:
+1. `SimpleEmbeddings.embed()` — API HuggingFace (19 chamadas sequenciais para embedding dos chunks)
+2. `SimpleConversationalRAG.invoke()` — Mais uma API call pro LLM
+3. Tudo roda **dentro do handler do Streamlit**, congelando o event loop
+4. O `st.spinner` não aparece porque o loop está bloqueado antes de renderizar
+
+### Problemas Identificados
+
+| # | Problema | Causa | Impacto |
+|---|---|---|---|
+| P1 | Embeddings sequenciais (19 HTTP calls) | `embed_batch()` itera sem paralelismo | 10-20s de espera bloqueante na primeira mensagem |
+| P2 | Nenhum feedback visual durante processamento | Event loop congelado antes do spinner renderizar | UI parece travada |
+| P3 | FAQ buttons disparam `_handle_message` no render cycle | `st.button` dentro de loop não controla main flow | Reruns em loop |
+| P4 | Sem cache nos embeddings | `_ensure_indexed` roda a cada `build_rag_chain` | Recompilação desnecessária |
+| P5 | Sem timeout nas API calls | `InferenceClient` sem timeout | Hang infinito em falhas de rede |
+
+### Arquitetura da Solução (Threading Pattern)
+
+```
+User envia mensagem
+    │
+    ├─► Adiciona mensagem ao chat (IMEDIATO)
+    │
+    ├─► Mostra placeholder "Pensando..." (IMEDIATO)
+    │
+    ├─► Spawn background thread
+    │       │
+    │       ├─► Embeddings pré-computados via @st.cache_resource (1x)
+    │       │
+    │       ├─► Cria RAG chain (usa vector store cacheado)
+    │       │
+    │       ├─► Chama LLM com timeout=60s
+    │       │
+    │       ├─► Atualiza session_state com resposta
+    │       │
+    │       └─► st.rerun() → UI atualiza com resposta
+    │
+    └─► st.rerun() → mostra placeholder "Pensando..."
+```
+
+### Arquivos a Alterar
+
+| Arquivo | Mudança |
+|---|---|
+| `rag_pipeline.py` | `build_vector_store()` com `@st.cache_resource`, embeddings pré-computados |
+| `llm_config.py` | `timeout=60` + retry com backoff |
+| `chat.py` | Threading pattern, `st.empty()` placeholder, FAQ via `session_state["pending_question"]` |
+
+---
+
+## 12.21 Chatbot — Plano de Correção Threading (13/05/2026)
+
+| # | Tarefa | Status |
+|---|---|---|
+| T1 | Registrar plano no TODO.md | ✅ Concluído |
+| T2 | `rag_pipeline.py`: cache_resource + build_vector_store | ✅ Concluído |
+| T3 | `llm_config.py`: timeout 60s + retry | ✅ Concluído |
+| T4 | `chat.py`: threading pattern + placeholder + FAQ via session_state | ✅ Concluído |
+| T5 | Atualizar README.md com fluxo do chatbot | ✅ Concluído |
+| T6 | Testar pytest + streamlit | ✅ Concluído (34/34)
+
+---
+
+## 12.22 Chatbot — Reimplementação do Zero (13/05/2026)
+
+**Problema:** O chatbot atual apresenta timeout/lentidão por 3 motivos principais:
+
+1. **Embeddings via API HTTP** — O código usa `InferenceClient.feature_extraction()` que faz chamadas HTTP individuais para cada chunk. Com ~30 chunks, são 30 chamadas HTTP sequenciais = lentidão extrema.
+
+2. **Sem paralelismo** — O processamento é sequencial, sem uso de threads ou batch.
+
+3. **Cache não funciona** — O `@st.cache_resource` no `build_vector_store` rebuilda o índice toda vez porque recebe `_df_hash` como parâmetro variável.
+
+**Sintoma relatado:** Timeout / Lentidão
+
+### 12.22.1 Arquitetura Proposta
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    STREAMLIT FRONTEND                               │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │  chat.py (tabs/chat.py)                                      │  │
+│  │  - Interface com chat_input e expander de FAQ               │  │
+│  │  - Session state para histórico                               │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PIPELINE RAG                                     │
+│  ┌──────────────────────┐    ┌──────────────────────┐            │
+│  │ Embeddings LOCAL     │    │ LLM (HuggingFace)    │            │
+│  │ sentence-transformers│    │ Inference API        │            │
+│  │ paraphrase-multilingual│  │ + retry + fallback   │            │
+│  │ MiniLM-L12-v2        │    │                      │            │
+│  │ (cpu, rápido)        │    │                      │            │
+│  └──────────┬─────────────┘    └──────────┬───────────┘            │
+│             │                              │                       │
+│             ▼                              ▼                       │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │ SimpleVectorStore (FAISS-like em memória)                   │  │
+│  │ - Busca por similaridade cosseno                            │  │
+│  │ - Cache built once per session via @st.cache_resource       │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    KNOWLEDGE BASE                                   │
+│  ┌──────────────────────┐    ┌──────────────────────┐            │
+│  │ knowledge_base.py   │    │ load_data.py         │            │
+│  │ - Docs estáticos    │    │ - Estatísticas       │            │
+│  │ - FAQ completo      │    │   dinâmicas do df    │            │
+│  └──────────────────────┘    └──────────────────────┘            │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 12.22.2 Arquivos a Criar/Modificar
+
+| Arquivo | Ação | Descrição |
+|---------|------|-----------|
+| `src/dashboard/chat/rag_pipeline.py` | **reescrever** | Novo pipeline com embeddings locais + cache correto |
+| `src/dashboard/chat/llm_config.py` | **reescrever** | LLM com retry, timeout, fallback |
+| `src/dashboard/chat/knowledge_base.py` | manter | Já está correto |
+| `src/dashboard/tabs/chat.py` | **simplificar** | Apenas UI, lógica movida para rag_pipeline |
+| `.streamlit/secrets.toml` | **criar** | Configuração de secrets para Cloud |
+| `.env.local` | **atualizar** | Token HF (mantém compatibilidade local) |
+| `requirements.txt` | **atualizar** | Adicionar sentence-transformers |
+
+### 12.22.3 Solução Técnica
+
+#### Embeddings Locais (mudança principal):
+
+```python
+# ANTES (lento via API):
+self.client.feature_extraction(text, model=EMBEDDING_MODEL)
+
+# DEPOIS (rápido local):
+from sentence_transformers import SentenceTransformer
+model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+embeddings = model.encode(texts, batch_size=32)
+```
+
+**Problema:** `sentence-transformers` requer `torch` que causa problemas no Streamlit Cloud (compilação nativa).
+
+**Solução alternativa:** Usar embeddings via API em batch com paralelismo:
+- Fazer todas as chamadas de embedding em paralelo (ThreadPoolExecutor)
+- Comprimir em uma única chamada HTTP se possível
+- Usar timeout adequado
+
+#### Cache corrigido:
+
+```python
+@st.cache_resource(ttl=3600)
+def get_vector_store():
+    # Sem parâmetros variáveis - build only once
+    # Gera hash interno a partir dos docs
+```
+
+### 12.22.4 Cronograma
+
+| Fase | Tarefa | Status |
+|------|--------|--------|
+| 1 | Atualizar `requirements.txt` ou `pyproject.toml` | Aberto |
+| 2 | Reescrever `llm_config.py` com retry/timeout | Aberto |
+| 3 | Reescrever `rag_pipeline.py` com embeddings locais | Aberto |
+| 4 | Simplificar `tabs/chat.py` | Aberto |
+| 5 | Criar `.streamlit/secrets.toml` | Aberto |
+| 6 | Testar localmente | Aberto |
+| 7 | Configurar secrets no Streamlit Cloud | Aberto |
+
+### 12.22.5 Implementação Concluída (13/05/2026)
+
+**Arquivos alterados:**
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/dashboard/chat/llm_config.py` | Timeout aumentado para 90s, retry com backoff |
+| `src/dashboard/chat/rag_pipeline.py` | Paralelismo com ThreadPoolExecutor (8 workers), cache correto via `@st.cache_resource` |
+| `src/dashboard/tabs/chat.py` | Removido parâmetro df_hash, spinner移到 durante processamento |
+| `.streamlit/.gitignore` | Criado para proteger secrets |
+
+**Testes:** 34/34 passando
+
+**Nota sobre performance:**
+O bottleneck é a API HuggingFace para embeddings (feature_extraction), não o código. Mesmo com paralelismo, cada chamada HTTP leva tempo. Se o problema persistir no Streamlit Cloud, considerar:
+- Groq API (mais rápido, gratuito com Llama-3-8B)
+- Reduzir número de chunks (menor = menos chamadas HTTP)
+
+---
+
+## 12.23 Chatbot — Configuração Streamlit Cloud (13/05/2026)
+
+**Para ativar o chatbot no Streamlit Cloud:**
+
+1. Acessar o dashboard no Streamlit Cloud
+2. Ir em **Settings** > **Secrets**
+3. Adicionar:
+   ```
+   [general]
+   HF_TOKEN = "hf_seu_token_aqui"
+   ```
+4. Salvar e fazer redeploy
+
+**Token HuggingFace:**
+- Criar conta em https://huggingface.co
+- Gerar Access Token em Settings > Access Tokens
+- Tipo: **Fine-grained**, permissão: **Inference > Make calls to the serverless Inference API**
+- Credits gratuitos disponíveis (~$0.10/mês)
+
+---
+
+## 12.24 Chatbot — Otimização de Performance (13/05/2026)
+
+**Problema:** Chatbot trava toda a aplicação e o computador durante uso. Causa: chamadas HTTP sequenciais para API HuggingFace (embeddings + LLM) sem timeout adequado.
+
+### 12.24.1 Plano de Otimização
+
+| # | Otimização | Descrição |
+|---|---|---|
+| 1 | **Modelo menor** | Trocar `Llama-3.1-8B-Instruct` por `microsoft/Phi-3-mini-4k-instruct` (4B params, muito mais rápido) |
+| 2 | **Timeouts agressivos** | LLM: 30s (em vez de 90s), Embedding: 15s (em vez de 30s) |
+| 3 | **Fallback para FAQ** | Se API falhar/timeout, retornar resposta do FAQ estático |
+| 4 | **Cache do LLM** | Instância do LLM em session_state (não criar nova a cada mensagem) |
+| 5 | **Loading state** | Feedback visual adequado sem travar UI |
+
+### 12.24.2 Implementação
+
+| Arquivo | Mudança |
+|---------|---------|
+| `llm_config.py` | Modelo Phi-3-mini, timeout 30s, retry com backoff, fallback para FAQ |
+| `rag_pipeline.py` | Timeout no embeddings, cache otimizado |
+| `chat.py` | LLM em cache via session_state, fallback visual |
+
+### 12.24.3 Status
+
+| Tarefa | Status |
+|--------|--------|
+| T.1 Registrar plano no TODO.md | ✅ Concluído |
+| T.2 Substituir modelo por Phi-3-mini | ✅ Concluído |
+| T.3 Adicionar timeouts agressivos | ✅ Concluído |
+| T.4 Adicionar fallback para FAQ | ✅ Concluído |
+| T.5 Cache do LLM via session_state | ✅ Concluído |
+| T.6 Testar localmente | ✅ Concluído (34/34) |
+
+### 12.24.4 Mudanças Implementadas
+
+| Arquivo | Mudança |
+|---------|---------|
+| `llm_config.py` | Modelo: `microsoft/Phi-3-mini-4k-instruct` (4B params), timeout 30s, max_tokens 512, fallback FAQ |
+| `rag_pipeline.py` | Embedding timeout: 15s, MAX_WORKERS: 4 |
+| `chat.py` | Chain cacheado via session_state, clear_conversation() remove chain, erro amigável |
+
+### 12.24.5 Testes
+
+**34/34 testes passando**
+
+---
+
+## 12.28 Chatbot — Migrar para Cohere API (13/05/2026)
+
+**Problema:** HuggingFace Inference API não suporta modelos de chat (Phi-3, Qwen, Llama) no plano gratuito/trial.
+
+**Solução:** Migrar para Cohere API (modelo `command-r7b-12-2024`).
+
+| Componente | Antes | Depois |
+|------------|-------|--------|
+| Provider | HuggingFace (problemas) | Cohere (funcionando) |
+| Modelo | Phi-3-mini-4k-instruct | command-r7b-12-2024 |
+| API Key | HF_TOKEN | COHERE_API_KEY |
+
+**Arquivos alterados:**
+- `.env.local` — adicionada COHERE_API_KEY
+- `.env.example` — documentada variável
+- `pyproject.toml` — adicionada dependência `cohere`
+- `src/dashboard/chat/llm.py` — reescrito para usar Cohere Client
+
+**Status:** ✅ Concluído (34/34 testes passando)
+
+---
+
+## 12.27 Chatbot — Troca de Modelo (13/05/2026)
+
+**Problema:** Chatbot retornava "ConnectionResetError: [WinError 10054]" com modelo Phi-3-mini.
+
+**Solução:** Trocar para modelo mais leve e rápido.
+
+| Configuração | Antes | Depois |
+|--------------|-------|--------|
+| Modelo | `microsoft/Phi-3-mini-4k-instruct` (4B) | `Qwen/Qwen2-0.5B-Instruct` (0.5B) |
+
+**Rationale:** Qwen2-0.5B é muito menor (0.5B vs 4B params), mais rápido e menos propenso a erros de conexão.
+
+**Arquivo alterado:** `src/dashboard/chat/llm.py`
+
+**Status:** ✅ Concluído
+
+---
+
+## 12.26 Chatbot — Timeout Aumentado (13/05/2026)
+
+**Problema:** Chatbot retornava "Tempo limite excedido" com timeout de 30s.
+
+**Solução:** Aumentar timeout e retries para dar mais tempo à API.
+
+| Configuração | Antes | Depois |
+|--------------|-------|--------|
+| LLM_TIMEOUT | 30s | 60s |
+| MAX_RETRIES | 2 | 3 |
+| RETRY_BACKOFF | 1.5 | 2 |
+
+**Arquivo alterado:** `src/dashboard/chat/llm.py`
+
+**Status:** ✅ Concluído
+
+---
+
+## 12.25 Chatbot — Reimplementação Leve (13/05/2026)
+
+**Problema:** O chatbot atual (com RAG, LangChain, embeddings) é muito pesado e trava a aplicação.
+
+**Solução:** Chatbot simples via API HuggingFace direta, com contexto dos dados reais injetado no prompt.
+
+### 12.25.1 Arquitetura Nova
+
+```
+┌─────────────────────────────────────────┐
+│  chat.render(df)                       │
+│  → get_stats_context(df)               │
+│  → prompt = SYSTEM + CONTEXTO + PERGUNTA│
+│  → HuggingFace API (Phi-3-mini)        │
+│  → Resposta                            │
+└─────────────────────────────────────────┘
+```
+
+| Componente | Antes (pesado) | Depois (leve) |
+|------------|----------------|---------------|
+| LLM | LangChain + ChatHuggingFace | InferenceClient direto |
+| Embeddings | sentence-transformers (API) | Removido |
+| Vector Store | FAISS/InMemoryVectorStore | Removido |
+| RAG | LangChain ConversationalRetrievalChain | Prompt engineering |
+| Contexto | Vector store search | String injetada no prompt |
+
+### 12.25.2 Arquitetura de Arquivos
+
+```
+src/dashboard/
+├── chat/
+│   ├── __init__.py
+│   ├── llm.py         # API HuggingFace + contexto
+│   └── app.py         # Interface de chat
+└── tabs/
+    └── chat.py        # Wrapper para sidebar
+```
+
+### 12.25.3 Contexto Dinâmico dos Dados
+
+```python
+def get_stats_context(df):
+    """Gera string de contexto com KPIs reais do DataFrame."""
+    return f"""
+    📊 ESTATÍSTICAS ATUAIS DO DASHBOARD:
+    - Total de ligações: {len(df)}
+    - Ligações ativas: {(df['SIT._LIG_AGUA'] == 'ATIVA').sum()}
+    - Faturamento mensal: R$ {df['VALOR_TOTAL'].sum():,.2f}
+    - Volume total: {df['VOLUME_FATURADO'].sum():,.0f} m³
+    - Anomalias (LIDO > REAL): {(df['VOLUME_REAL'] < df['VOLUME_LIDO']).sum()}
+    - Consumo zero ativo: {((df['VOLUME_LIDO'] == 0) & (df['SIT._LIG_AGUA'] == 'ATIVA')).sum()}
+    - Hidrômetros > 5 anos: {(df['IDADE_HIDRO_ANOS'].fillna(0) > 5).sum()}
+    - Por categoria: {df['CATEGORIA_PRINCIPAL'].value_counts().to_dict()}
+    """
+```
+
+### 12.25.4 Dependências
+
+```toml
+huggingface-hub = ">=0.20.0"
+```
+
+(sem LangChain, sem FAISS, sem sentence-transformers)
+
+### 12.25.5 Funcionamento Local vs Cloud
+
+| Ambiente | HF_TOKEN |
+|----------|----------|
+| Local | `.env.local` (já existe) |
+| Streamlit Cloud | Secrets do deploy |
+
+### 12.25.6 Tarefas
+
+| # | Tarefa | Status |
+|---|---|---|
+| T1 | Registrar plano no TODO.md | ✅ Concluído |
+| T2 | Adicionar huggingface-hub no pyproject.toml | ✅ Concluído |
+| T3 | Criar `src/dashboard/chat/__init__.py` | ✅ Concluído |
+| T4 | Criar `src/dashboard/chat/llm.py` | ✅ Concluído |
+| T5 | Criar `src/dashboard/chat/app.py` | ✅ Concluído |
+| T6 | Criar `src/dashboard/tabs/chat.py` | ✅ Concluído |
+| T7 | Atualizar `main.py` para integrar chat | ✅ Concluído |
+| T8 | Testar localmente | ✅ Concluído |
+| T9 | Verificar 34 testes | ✅ Concluído (34/34) |
+
+---
+
+## Status Final — Projeto Completo
+
+| Componente | Status |
+|------------|--------|
+| ETL Pipeline | ✅ Funcional |
+| Dashboard Streamlit | ✅ Funcional |
+| 34 Testes | ✅ Passando |
+| Dark Mode | ✅ Implementado |
+| Chatbot Leve | ✅ Implementado (Cohere API, command-r7b-12-2024) |
+| Streamlit Cloud | ⏳ Pending deploy |

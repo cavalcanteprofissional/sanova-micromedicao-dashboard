@@ -1,8 +1,13 @@
 import os
+import time
+import requests
 
 COHERE_MODEL = "command-r7b-12-2024"
 MAX_TOKENS = 500
 TEMPERATURE = 0.1
+REQUEST_TIMEOUT = 90
+MAX_RETRIES = 3
+RETRY_BACKOFF = 2
 
 
 FAQ_FALLBACK = {
@@ -37,31 +42,6 @@ def get_cohere_key() -> str | None:
         from dotenv import load_dotenv
         load_dotenv(dotenv_path=dotenv_path)
         token = os.getenv("COHERE_API_KEY")
-        if token:
-            return token
-
-    return None
-
-
-def get_hf_key() -> str | None:
-    """Retorna o token da API HuggingFace — via st.secrets, env var ou .env.local."""
-    try:
-        import streamlit as st
-        key = st.secrets.get("HF_TOKEN")
-        if key:
-            return key
-    except Exception:
-        pass
-
-    token = os.getenv("HF_TOKEN")
-    if token:
-        return token
-
-    dotenv_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env.local')
-    if os.path.exists(dotenv_path):
-        from dotenv import load_dotenv
-        load_dotenv(dotenv_path=dotenv_path)
-        token = os.getenv("HF_TOKEN")
         if token:
             return token
 
@@ -155,42 +135,65 @@ def _get_fallback(question: str) -> str | None:
     return None
 
 
-def get_cohere_client():
-    """Retorna cliente Cohere com cache via session_state."""
-    import streamlit as st
+def _call_cohere_api(prompt: str) -> str:
+    """Faz chamada para API Cohere usando requests (mais estável no Windows)."""
+    api_key = get_cohere_key()
+    url = "https://api.cohere.com/v1/chat"
 
-    if "cohere_client" not in st.session_state:
-        api_key = get_cohere_key()
-        if not api_key:
-            raise ValueError("COHERE_API_KEY não configurada. Configure no .env.local ou nos secrets do Streamlit Cloud.")
-        import cohere
-        st.session_state["cohere_client"] = cohere.Client(api_key)
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
 
-    return st.session_state["cohere_client"]
+    payload = {
+        "model": COHERE_MODEL,
+        "message": prompt,
+        "max_tokens": MAX_TOKENS,
+        "temperature": TEMPERATURE
+    }
+
+    response = requests.post(
+        url,
+        headers=headers,
+        json=payload,
+        timeout=REQUEST_TIMEOUT
+    )
+
+    if response.status_code == 200:
+        data = response.json()
+        return data.get("text", "")
+    elif response.status_code == 429:
+        raise Exception("rate_limit_exceeded")
+    elif response.status_code >= 500:
+        raise Exception("server_error")
+    else:
+        raise Exception(f"api_error: {response.status_code}")
 
 
 def perguntar(pergunta: str, contexto: str) -> dict:
-    """Envia pergunta com contexto para a API Cohere (usando Chat API)."""
-    client = get_cohere_client()
-
+    """Envia pergunta com contexto para a API Cohere com retry robusto."""
     prompt = SYSTEM_PROMPT.format(context=contexto, question=pergunta)
 
-    try:
-        response = client.chat(
-            message=prompt,
-            model=COHERE_MODEL,
-            max_tokens=MAX_TOKENS,
-            temperature=TEMPERATURE
-        )
-        answer = response.text.strip()
-        return {"answer": answer}
-    except Exception as e:
-        error_msg = str(e)
-        fallback = _get_fallback(pergunta)
-        if fallback:
-            return {"answer": fallback}
-        if "rate" in error_msg.lower() or "quota" in error_msg.lower():
-            return {"answer": "", "error": "Limite de requisições excedido. Tente novamente mais tarde."}
-        if "timeout" in error_msg.lower() or "connection" in error_msg.lower():
-            return {"answer": "", "error": "Erro de conexão. Verifique sua internet e tente novamente."}
-        return {"answer": "", "error": error_msg}
+    last_error = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            answer = _call_cohere_api(prompt)
+            return {"answer": answer.strip()}
+        except Exception as e:
+            last_error = str(e)
+
+            if attempt < MAX_RETRIES - 1:
+                wait_time = RETRY_BACKOFF ** attempt
+                time.sleep(wait_time)
+                continue
+
+    fallback = _get_fallback(pergunta)
+    if fallback:
+        return {"answer": fallback}
+
+    error_lower = last_error.lower()
+    if "rate_limit" in error_lower or "quota" in error_lower:
+        return {"answer": "", "error": "Limite de requisições excedido. Tente novamente mais tarde."}
+    if "timeout" in error_lower or "connection" in error_lower or "10054" in error_lower:
+        return {"answer": "", "error": "Erro de conexão. Verifique sua internet e tente novamente."}
+    return {"answer": "", "error": last_error}

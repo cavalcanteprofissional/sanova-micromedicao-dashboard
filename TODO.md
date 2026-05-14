@@ -1131,6 +1131,27 @@ O bottleneck é a API HuggingFace para embeddings (feature_extraction), não o c
 
 ---
 
+## 12.29 Chatbot — Usar requests em vez de httpx (13/05/2026)
+
+**Problema:** `ConnectionResetError: [WinError 10054]` no Windows com biblioteca httpx.
+
+**Solução:** Substituir cliente nativo do Cohere (httpx) por requests direto.
+
+| Configuração | Antes | Depois |
+|-------------|-------|---------|
+| Biblioteca | cohere.Client (httpx) | requests direto |
+| Timeout | 60s | 90s |
+| Retry | 1 | 3 |
+| Backoff | - | 2s |
+
+**Rationale:** requests é mais estável no Windows, não tem problemas de event loop.
+
+**Arquivo alterado:** `src/dashboard/chat/llm.py`
+
+**Status:** ✅ Concluído (34/34 testes passando)
+
+---
+
 ## 12.28 Chatbot — Migrar para Cohere API (13/05/2026)
 
 **Problema:** HuggingFace Inference API não suporta modelos de chat (Phi-3, Qwen, Llama) no plano gratuito/trial.
@@ -1284,5 +1305,5 @@ huggingface-hub = ">=0.20.0"
 | Dashboard Streamlit | ✅ Funcional |
 | 34 Testes | ✅ Passando |
 | Dark Mode | ✅ Implementado |
-| Chatbot Leve | ✅ Implementado (Cohere API, command-r7b-12-2024) |
+| Chatbot Leve | ✅ Implementado (Cohere API + requests, timeout 90s) |
 | Streamlit Cloud | ⏳ Pending deploy |

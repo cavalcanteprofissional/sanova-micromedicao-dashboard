@@ -2,9 +2,9 @@
 
 ![Dashboard Preview](thumbnail.png)
 
-**Análise Comercial de Micromedição** — Streamlit dashboard for commercial analysis of sanitation micro-metering data.
+**Análise Comercial de Micromedição** —  Dashboard for commercial analysis of sanitation micro-metering data.
 
-> Desenvolvido por [Lucas Cavalcante](https://cavalcanteprofissional.github.io/portfolio/) | Teste prático para Analista de Dados | SANOVA — Inovação em Saneamento
+> Desenvolvido por [Lucas Cavalcante](https://cavalcanteprofissional.github.io/portfolio/) | Teste prático para Analista de Dados | SANOVA
 
 ---
 
@@ -438,4 +438,4 @@ O score é calculado com pesos definidos empiricamente:
 
 **SANOVA – Soluções para Gestão da Água** | [sanova.com.br](https://sanova.com.br)
 
-*Desenvolvido por [Lucas Cavalcante](https://cavalcanteprofissional.github.io/portfolio/) | Palhoça/SC | Maio 2026*
+*Desenvolvido por [Lucas Cavalcante](https://cavalcanteprofissional.github.io/portfolio/) | Fortaleza/CE | Maio 2026*

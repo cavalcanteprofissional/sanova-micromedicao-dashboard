@@ -1088,6 +1088,69 @@ O bottleneck é a API HuggingFace para embeddings (feature_extraction), não o c
 
 **Problema:** Chatbot trava toda a aplicação e o computador durante uso. Causa: chamadas HTTP sequenciais para API HuggingFace (embeddings + LLM) sem timeout adequado.
 
+---
+
+## 13. Detalhamento de Inconsistências de Faturamento (15/05/2026)
+
+### 13.1 Contexto
+
+O log `validation_log.json` mostrava um aviso não detalhado:
+```
+"Q003: 1 inconsistências em VALOR_TOTAL"
+```
+
+A inconsistência representa registros onde `VALOR_TOTAL ≠ VALOR_AGUA + VALOR_ESGOTO + VALOR_SERVICOS + VALOR_IMPOSTOS - VALOR_DESCONTOS`.
+
+### 13.2 Caso Identificado
+
+| Campo | Valor |
+|-------|-------|
+| MATRICULA | 1373618-3 |
+| VALOR_AGUA | 0,00 |
+| VALOR_ESGOTO | 495,40 |
+| VALOR_SERVICOS | 0,00 |
+| VALOR_IMPOSTOS | 46,81 |
+| VALOR_DESCONTOS | 0,00 |
+| VALOR_TOTAL (original) | 448,59 |
+| VALOR_CALCULADO | 542,21 |
+| DIFERENÇA | 93,62 |
+
+**Causa provável:** Desconto não identificado (provavelmente um desconto não registrado no campo VALOR_DESCONTOS que deveria ser maior que 0,00).
+
+### 13.3 Alterações Implementadas
+
+| Arquivo | Modificação |
+|---------|------------|
+| `src/etl/transformer.py` | Adicionada função `validate_faturamento()` que cria colunas derivadas |
+| `src/etl/loader.py` | Log detalhado com lista de MATRÍCULAS inconsistentes |
+| `src/dashboard/tabs/data_quality.py` | Novo KPI + nova seção com tabela detalhada |
+
+### 13.4 Colunas Criadas pelo ETL
+
+| Coluna | Descrição |
+|--------|-----------|
+| `VALOR_TOTAL_CALCULADO` | Soma: ÁGUA + ESGOTO + SERVIÇOS + IMPOSTOS - DESCONTOS |
+| `DIFERENCA_FATURAMENTO` | Diferença absoluta entre TOTAL e CALCULADO |
+| `FLAG_INCONSIST_FATURAMENTO` | True se diferença > R$ 0,01 |
+
+### 13.5 Nova Seção no Dashboard
+
+A aba "Qualidade de Dados" agora exibe:
+- **KPI adicional**: "Inconsist. Faturamento" com contagem
+- **Seção colapsável**: Tabela com detalhes das inconsistências (MATRICULA, componentes, valores original/calculado, diferença)
+
+### 13.6 Validação
+
+Executar o pipeline novamente para aplicar as mudanças:
+```bash
+python src/etl/run_pipeline.py
+```
+
+**Resultado esperado:**
+- `data/processed/micromedicao_tratado.csv` agora tem 3 novas colunas
+- `data/stage/validation_log.json` agora inclui lista de MATRÍCULAS afetadas
+- Dashboard exibe as inconsistências detalhadas na aba Qualidade de Dados
+
 ### 12.24.1 Plano de Otimização
 
 | # | Otimização | Descrição |
@@ -1690,4 +1753,94 @@ df['FLAG_CONSUMO_CONSTANTE'] = (
 | Chatbot Leve | ✅ Implementado (Cohere API + requests, timeout 90s) |
 | UI/UX Improvements | ✅ Concluído (seção 13) |
 | Auditoria Engenharia/Metodologia | ✅ Concluído (seção 14) |
+| Validações Q004-Q012 | ✅ Implementado (seção 15) |
 | Streamlit Cloud | ⏳ Pending deploy |
+
+---
+
+## 15. Validações de Qualidade Q004-Q012 (15/05/2026)
+
+### 15.1 Contexto
+
+Expansão do sistema de validação de qualidade de dados com 8 novas verificações além do Q003 já implementado.
+
+### 15.2 Validações Implementadas
+
+| Código | Validação | Coluna Flag | Descrição |
+|--------|-----------|-------------|-----------|
+| Q004 | VOLUME_FATURADO < VOLUME_REAL | `FLAG_FATURADO_MENOR_REAL` | Erro sistêmico |
+| Q006 | Valores negativos | `FLAG_VOLUME_NEGATIVO`, `FLAG_VALOR_NEGATIVO` | Impossível fisicamente |
+| Q007 | Ligação ativa sem receita | `FLAG_ATIVA_SEM_RECEITA` | Receita perdida garantida |
+| Q008 | Categoria ausente | `FLAG_SEM_CATEGORIA` | 17 registros sem categoria |
+| Q009 | Data instalação inválida | `FLAG_DATA_INVALIDA` | Ausente ou futura |
+| Q010 | Zero economias | `FLAG_ZERO_ECONOMIAS` | Ativa com 0 economias |
+| Q012 | VOLUME_REAL > VOLUME_LIDO | `FLAG_REAL_MAIOR_LIDO` | Matematicamente impossível |
+
+### 15.3 Arquivos Alterados
+
+| Arquivo | Modificação |
+|---------|------------|
+| `src/etl/transformer.py` | +Função `validate_data_quality()` com 8 novas validações |
+| `src/etl/loader.py` | +8 novos logs detalhados no `validation_log.json` |
+| `src/dashboard/tabs/data_quality.py` | +8 KPIs + 4 tabelas detalhadas |
+
+### 15.4 Métricas Resultantes
+
+O dataset tratado agora possui ~170 colunas (antes 154), incluindo todas as flags de validação.
+
+### 15.5 Validação
+
+Executar o pipeline novamente para aplicar as mudanças:
+```bash
+python src/etl/run_pipeline.py
+```
+
+**Resultado esperado:**
+- `validation_log.json` com Q001-Q012 detalhados
+- Dashboard com 12 KPIs de inconsistências
+- Tabelas detalhadas para Q004, Q007, Q008, Q012
+
+---
+
+## 16. Melhoria do Contexto do Chatbot IA (15/05/2026)
+
+### 16.1 Contexto Anterior
+
+O chatbot utilizava apenas a função `get_stats_context(df)` que gerava um contexto básico com ~10 métricas do DataFrame.
+
+### 16.2 Novas Funções Implementadas
+
+| Função | Descrição |
+|--------|------------|
+| `get_stats_context(df)` | Contexto base com métricas gerais (já existia) |
+| `get_validation_context(df)` | Validações Q001-Q012 com tabela formatada |
+| `get_quality_metrics_context(df)` | IQD, missing por campo, métricas de qualidade |
+| `get_documentation_excerpt()` | Trecho da DOCUMENTACAO_DADOS.md para contexto |
+| `get_full_context(df, include_docs)` | Combina todas as fontes de contexto |
+
+### 16.3 Arquivos Alterados
+
+| Arquivo | Modificação |
+|---------|------------|
+| `src/dashboard/chat/llm.py` | +4 novas funções de contexto, MAX_TOKENS aumentado para 800 |
+| `src/dashboard/chat/app.py` | `_process_message()` agora usa `get_full_context()` |
+
+### 16.4 Conteúdo do Novo Contexto
+
+O chatbot agora recebe um contexto muito mais rico (~15.000+ caracteres):
+
+1. **Estatísticas gerais**: Total de ligações, ativas, faturamento, volume, anomalias
+2. **Validações Q001-Q012**: Tabela formatada com 11 códigos de verificação
+3. **Métricas de qualidade**: IQD, registros completos, missing por campo crítico
+4. **Documentação técnica**: Glossário, categorias, tipos de hidrômetro, classes metrológicas, anomalias, premissas
+
+### 16.5 Limite de Tamanho
+
+A função `get_full_context()` verifica se o contexto excede 120.000 caracteres e trunca se necessário para evitar erros de token limits.
+
+### 16.6 Teste
+
+Executar o dashboard e verificar se o chatbot responde com contexto melhorado:
+```bash
+python src/dashboard/main.py
+```

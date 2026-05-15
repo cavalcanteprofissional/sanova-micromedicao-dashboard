@@ -101,14 +101,14 @@ def _render_messages():
 
 
 def _process_message(user_input: str, df: pd.DataFrame):
-    from dashboard.chat.llm import get_stats_context, perguntar
+    from dashboard.chat.llm import get_full_context, perguntar
 
     messages = st.session_state["chat_messages"]
     messages.append({"role": "user", "content": user_input})
     st.session_state["chat_response"] = None
 
     try:
-        contexto = get_stats_context(df)
+        contexto = get_full_context(df, include_docs=True)
 
         with st.spinner("Consultando..."):
             result = perguntar(user_input, contexto)

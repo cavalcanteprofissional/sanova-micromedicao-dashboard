@@ -47,7 +47,7 @@ flowchart TD
     end
 
     subgraph PROCESSED["data/processed/"]
-        E["micromedicao_tratado.csv\n1.912 x 151"]
+        E["micromedicao_tratado.csv\n~170 cols"]
     end
 
     subgraph DASHBOARD["src/dashboard/"]
@@ -133,8 +133,8 @@ dashboard-sanova/
 │       └── run_pipeline.py
 ├── data/
 │   ├── raw/micromedicao.xlsx
-│   ├── processed/micromedicao_tratado.csv
-│   └── stage/validation_log.json
+│   ├── processed/micromedicao_tratado.csv    # ~170 colunas (flags + validações)
+│   └── stage/validation_log.json             # Q001-Q012 detalhado
 └── tests/                       # 34 testes pytest
 ```
 
@@ -152,15 +152,109 @@ flowchart LR
     N5 --> N6["6. Missing volumes\nflag preservada"]
     N6 --> N7["7. Missing valores\n0 para não-ativos"]
     N7 --> N8["8. Outliers\nP99 + flag"]
-    N8 --> N9["9. Enriquecimento\n14 cols calculadas"]
-    N9 --> N10["10. Validar\nQ001-Q006"]
-    N10 --> CSV["CSV Tratado\n1.912 x 151"]
+    N8 --> N9["9. Enriquecimento\n17 cols calculadas"]
+    N9 --> N10["10. Validar\nFaturamento Q003"]
+    N10 --> N11["11. Validar\nQ004-Q012"]
+    N11 --> N12["12. Salvar + Log\nQ001-Q012"]
+    N12 --> CSV["CSV Tratado\n~170 cols"]
 
     style XLSX fill:#e74c3c,color:#fff
-    style N1,N2,N3,N4,N5,N6,N7,N8,N9 fill:#2980B9,color:#fff
-    style N10 fill:#f39c12,color:#fff
+    style N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11 fill:#2980B9,color:#fff
     style CSV fill:#27AE60,color:#fff
 ```
+
+### Validação de Consistência de Faturamento (Q003)
+
+O ETL inclui uma verificação adicional de integridade dos dados de faturamento:
+
+```mermaid
+flowchart LR
+    VALORES["VALOR_AGUA + ESGOTO\n+ SERVICOS + IMPOSTOS\n- DESCONTOS"]
+    --> COMP["Comparar com\nVALOR_TOTAL"]
+    --> DIF{"Diferença\n> R$ 0,01?"}
+    DIF -->|"SIM"| FLAG["FLAG_INCONSIST_FATURAMENTO\n= True"]
+    DIF -->|"NÃO"| OK["Dado consistente"]
+    FLAG --> LOG["Log detalhado\nMATRÍCULAS afetadas"]
+    OK --> LOG
+
+    style VALORES fill:#1a1a2e,color:#eee
+    style COMP fill:#16213e,color:#eee
+    style DIF fill:#f39c12,color:#fff
+    style FLAG fill:#E74C3C,color:#fff
+    style OK fill:#27AE60,color:#fff
+    style LOG fill:#0f3460,color:#eee
+```
+
+**Colunas criadas pelo ETL:**
+
+| Coluna | Descrição |
+|--------|-----------|
+| `VALOR_TOTAL_CALCULADO` | Soma: ÁGUA + ESGOTO + SERVIÇOS + IMPOSTOS - DESCONTOS |
+| `DIFERENCA_FATURAMENTO` | Diferença absoluta entre TOTAL e CALCULADO |
+| `FLAG_INCONSIST_FATURAMENTO` | True se diferença > R$ 0,01 |
+
+**Caso detectado (MATRICULA 1373618-3):**
+
+| Campo | Valor |
+|-------|-------|
+| VALOR_AGUA | R$ 0,00 |
+| VALOR_ESGOTO | R$ 495,40 |
+| VALOR_SERVICOS | R$ 0,00 |
+| VALOR_IMPOSTOS | R$ 46,81 |
+| VALOR_DESCONTOS | R$ 0,00 |
+| VALOR_TOTAL (original) | R$ 448,59 |
+| VALOR_CALCULADO | R$ 542,21 |
+| **DIFERENÇA** | **R$ 93,62** |
+
+> **Causa provável:** Desconto não identificado no campo VALOR_DESCONTOS (deveria ser maior que 0,00).
+
+**No Dashboard:** A aba "Qualidade de Dados" agora exibe um KPI adicional "Inconsist. Faturamento" e uma tabela detalhada com os registros afetados.
+
+---
+
+### Sistema de Validações Q001-Q012
+
+O ETL implementa um sistema completo de validações de qualidade de dados:
+
+```mermaid
+flowchart LR
+    subgraph VAL["Validações"]
+        Q001["Q001\nDuplicatas"]
+        Q002["Q002\nDatas futuras"]
+        Q003["Q003\nFaturamento"]
+        Q004["Q004\nFat < Real"]
+        Q005["Q005\nOutliers"]
+        Q006["Q006\nNegativos"]
+        Q007["Q007\nSem receita"]
+        Q008["Q008\nSem categoria"]
+        Q009["Q009\nData inválida"]
+        Q010["Q010\nZero economias"]
+        Q012["Q012\nReal > Lido"]
+    end
+
+    VAL --> LOG["validation_log.json"]
+    LOG --> DASH["Dashboard\n12 KPIs + Tabelas"]
+
+    style VAL fill:#1a1a2e,color:#eee
+    style LOG fill:#16213e,color:#eee
+    style DASH fill:#0f3460,color:#eee
+```
+
+**Todas as validações implementadas:**
+
+| Código | Validação | Flag Criada | Dashboard |
+|--------|-----------|-------------|-----------|
+| Q001 | MATRÍCULA duplicada | — | Log |
+| Q002 | Data instalação futura | — | Log |
+| Q003 | VALOR_TOTAL ≠ soma | `FLAG_INCONSIST_FATURAMENTO` | KPI + Tabela |
+| Q004 | VOLUME_FATURADO < VOLUME_REAL | `FLAG_FATURADO_MENOR_REAL` | KPI + Tabela |
+| Q005 | Outliers extremos (>P99) | `FLAG_OUTLIER_EXTREMO` | Log |
+| Q006 | Volumes/valores negativos | `FLAG_VOLUME_NEGATIVO`, `FLAG_VALOR_NEGATIVO` | KPI |
+| Q007 | Ativa sem receita | `FLAG_ATIVA_SEM_RECEITA` | KPI + Tabela |
+| Q008 | Sem categoria | `FLAG_SEM_CATEGORIA` | KPI + Tabela |
+| Q009 | Data inválida | `FLAG_DATA_INVALIDA` | KPI |
+| Q010 | Zero economias | `FLAG_ZERO_ECONOMIAS` | KPI |
+| Q012 | REAL > LIDO | `FLAG_REAL_MAIOR_LIDO` | KPI + Tabela |
 
 ---
 
@@ -168,7 +262,89 @@ flowchart LR
 
 Assistente de perguntas em linguagem natural sobre os dados de micromedição. Integrado na barra lateral do dashboard.
 
-> **Nota (13/05/2026):** O chatbot foi reimplementado em versão leve para evitar travamentos. A versão anterior usava RAG com embeddings via API que causava lentidão extrema.
+> **Nota (15/05/2026):** O chatbot agora inclui contexto rico com validações Q001-Q012, métricas de qualidade e documentação técnica.
+
+### Arquitetura do Chatbot com Contexto Aprimorado
+
+```mermaid
+flowchart TD
+    USER["Usuário envia\npergunta em PT-BR"]
+
+    subgraph CONTEXT["Geração de Contexto (~15KB)"]
+        C1["get_full_context(df)\nCombina todas as fontes"]
+        C2["get_stats_context()\nMétricas gerais"]
+        C3["get_validation_context()\nQ001-Q012"]
+        C4["get_quality_metrics_context()\nIQD, missing"]
+        C5["get_documentation_excerpt()\nDOCUMENTACAO_DADOS"]
+    end
+
+    subgraph PROMPT["Prompt Engineering"]
+        P1["SYSTEM_PROMPT\nDefinição de persona"]
+        P2["Contexto combinado\n+ Pergunta do usuário"]
+        P3["Token limit check\n(max 128K)"]
+    end
+
+    subgraph LLM["Processamento"]
+        L1["Cohere API\ncommand-r7b-12-2024\n128K context"]
+        L2["MAX_TOKENS: 800"]
+        L3["90s timeout\n3 retries"]
+    end
+
+    subgraph OUTPUT["Resposta"]
+        O1["Resposta formatada\nR$ 1.234,56\nm³"]
+        O2["Fallback FAQ\nse API falhar"]
+    end
+
+    USER --> C1
+    C1 --> C2 --> C3 --> C4 --> C5
+    C1 --> P1 --> P2 --> P3 --> L1
+    L1 --> L2 --> L3
+    L3 --> O1
+    L1 -.->|"erro/timeout"| O2
+
+    style USER fill:#2980B9,color:#fff
+    style CONTEXT fill:#1a1a2e,color:#eee
+    style PROMPT fill:#16213e,color:#eee
+    style LLM fill:#27AE60,color:#fff
+    style OUTPUT fill:#0f3460,color:#eee
+```
+
+### Fontes de Contexto do Chatbot
+
+| Função | Descrição | Tamanho |
+|--------|------------|---------|
+| `get_stats_context()` | Ligações, faturamento, anomalias, categorias | ~500 chars |
+| `get_validation_context()` | Tabela Q001-Q012 formatada | ~1.500 chars |
+| `get_quality_metrics_context()` | IQD, missing, completude | ~600 chars |
+| `get_documentation_excerpt()` | DOCUMENTACAO_DADOS.md | ~3.000 chars |
+| `get_full_context()` | **Combina todas as anteriores** | **~15.000 chars** |
+
+### Exemplo de Contexto Gerado
+
+```
+📊 ESTATÍSTICAS ATUAIS:
+- Total de ligações: 1.912
+- Ligações ativas: 1.815 (94,9%)
+- Faturamento mensal: R$ 1.167.995,44
+
+🔍 VALIDAÇÕES (Q001-Q012):
+| Código | Verificação | Qtd | Status |
+|--------|-------------|-----|--------|
+| Q003 | Inconsistência faturamento | 1 | ⚠️ |
+| Q005 | Outliers extremos | 19 | ⚠️ |
+| Q008 | Sem categoria | 17 | ⚠️ |
+| Q009 | Data inválida | 82 | ⚠️ |
+
+📈 QUALIDADE DE DADOS:
+- IQD: 88,4%
+- Registros completos: 1.756/1.912
+
+📚 DOCUMENTAÇÃO:
+- GLOSSÁRIO: MATRICULA, VOLUME_LIDO, VOLUME_REAL, etc.
+- CATEGORIAS: Residencial (87%), Comercial (7,5%), Industrial (4,3%)
+- HIDRÔMETROS: Unijato (72,6%), Multijato (7,3%), Ultrassônico (3,3%)
+- PREMISSAS: Tarifa mínima R$ 89,03, Submedição 15%
+```
 
 ### Arquitetura Nova (Sem RAG)
 
@@ -201,23 +377,35 @@ flowchart TD
 
 **Resultado:** ~66 packages no lock (antes: 126+), sem LangChain, sem travamentos.
 
-### Contexto Dinâmico dos Dados
+**Fontes de Contexto:**
 
-O chatbot inclui KPIs reais do DataFrame injetados no prompt:
+| Função | Conteúdo | Tamanho |
+|--------|----------|---------|
+| `get_stats_context()` | Ligações, faturamento, anomalias, categorias | ~500 caracteres |
+| `get_validation_context()` | Tabela Q001-Q012 com status | ~1.500 caracteres |
+| `get_quality_metrics_context()` | IQD, missing, completude | ~600 caracteres |
+| `get_documentation_excerpt()` | Glossário, tipos hidrômetro, premissas | ~3.000 caracteres |
+| `get_full_context()` | **Combinação de todas as anteriores** | **~15.000 caracteres** |
 
-```python
-def get_stats_context(df):
-    return f"""
-    📊 ESTATÍSTICAS ATUAIS:
-    - Total de ligações: {len(df)}
-    - Ligações ativas: {ativas}
-    - Faturamento mensal: R$ {faturamento_mensal:,.2f}
-    - Volume total: {volume_total:,.0f} m³
-    - Anomalias (LIDO > REAL): {anomalias} casos
-    - Consumo zero ativo: {consumo_zero} casos
-    - Hidrômetros > 5 anos: {hidrômetros_velhos} unidades
-    - Por categoria: {categorias}
-    """
+**Exemplo de contexto gerado:**
+
+```
+📊 ESTATÍSTICAS ATUAIS:
+- Total de ligações: 1.912
+- Ligações ativas: 1.815 (94,9%)
+- Faturamento mensal: R$ 1.167.995,44
+
+🔍 VALIDAÇÕES (Q001-Q012):
+| Q003 | Inconsistência faturamento | 1 | ⚠️ |
+| Q005 | Outliers extremos | 19 | ⚠️ |
+...
+
+📈 QUALIDADE DE DADOS:
+- IQD: 88,4%
+- Registros completos: 1.756 / 1.912
+
+📚 DOCUMENTAÇÃO:
+- Glossário, categorias, tipos de hidrômetro...
 ```
 
 ### Configuração
@@ -241,23 +429,33 @@ flowchart TD
         A2["session_state[chat_messages] += user"]
     end
 
-    subgraph PROCESS["2. Processamento"]
-        B1["get_stats_context(df)\nKPIs dinâmicos"]
-        B2["get_llm() → session_state\nCache do LLM"]
-        B3["perguntar()\nprompt + contexto"]
-        B4["Cohere API\ncommand-r7b-12-2024\n90s timeout"]
+    subgraph CONTEXT["2. Geração de Contexto (~15KB)"]
+        C1["get_full_context(df, include_docs=True)"]
+        C2["get_stats_context() - Métricas"]
+        C3["get_validation_context() - Q001-Q012"]
+        C4["get_quality_metrics_context() - IQD"]
+        C5["get_documentation_excerpt() - Docs"]
     end
 
-    subgraph OUTPUT["3. Resposta"]
-        C1["session_state[chat_response]"]
-        C2["st.rerun()"]
-        C3["st.chat_message"]
+    subgraph PROCESS["3. Processamento"]
+        B1["Combinar todas as fontes"]
+        B2["verificar token limit (128K)"]
+        B3["perguntar() + SYSTEM_PROMPT"]
+        B4["Cohere API\ncommand-r7b-12-2024\n800 tokens\n90s timeout"]
     end
 
-    A1 --> A2 --> PROCESS
-    B3 --> B4 --> OUTPUT
+    subgraph OUTPUT["4. Resposta"]
+        O1["session_state[chat_response]"]
+        O2["st.rerun()"]
+        O3["st.chat_message"]
+    end
+
+    A1 --> A2 --> CONTEXT
+    CONTEXT --> C1 --> C2 --> C3 --> C4 --> C5 --> PROCESS
+    PROCESS --> B1 --> B2 --> B3 --> B4 --> OUTPUT
 
     style INPUT fill:#1a1a2e,color:#eee
+    style CONTEXT fill:#16213e,color:#eee
     style PROCESS fill:#0f3460,color:#eee
     style OUTPUT fill:#1a3a2e,color:#eee
 ```
@@ -312,7 +510,7 @@ flowchart LR
 | **Consumo Zero** | Perda por tarifa mínima | Histograma, barras |
 | **Hidrômetros** | Tipo, marca, idade, substituição | Pizza, barras, tabela por idade |
 | **Recuperação de Receita** | Potencial por ação, waterfall | Waterfall, gauge, tabela priorizada |
-| **Qualidade de Dados** | IQD, missing, inconsistências | Heatmap, tabela |
+| **Qualidade de Dados** | IQD, Q001-Q012, 12 KPIs | Heatmap, tabelas detalhadas |
 
 ---
 

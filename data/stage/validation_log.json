@@ -1,12 +1,61 @@
 {
-  "timestamp": "2026-05-12T15:27:14.372618",
+  "timestamp": "2026-05-15T11:08:37.325226",
   "total_rows": 1912,
-  "total_cols": 151,
+  "total_cols": 172,
   "warnings": [
-    "Q003: 1 inconsistências em VALOR_TOTAL",
-    "Q005: 19 outliers extremos detectados"
+    "Q003: 1 inconsistências em VALOR_TOTAL - MATRÍCULAS: ['1373618-3']",
+    "Q005: 19 outliers extremos detectados",
+    "Q006: 10 valores negativos detectados - Campos: ['VALOR_SERVICOS', 'VALOR']",
+    "Q007: 26 ligações ativas sem receita",
+    "Q008: 17 registros sem categoria - MATRÍCULAS: ['1373866-6', '1373974-3', '1373976-0', '1374033-4', '1374040-7', '1374212-4', '1374229-9', '1374608-1', '1374609-0', '1374610-3', '1374645-6', '1374646-4', '1374647-2', '1374648-0', '1374649-9', '1374650-2', '1374651-0']",
+    "Q009: 82 datas de instalação inválidas",
+    "Q010: 6 ligações ativas com zero economias"
   ],
   "errors": [],
+  "inconsistencias_faturamento": {
+    "quantidade": 1,
+    "matriculas": [
+      "1373618-3"
+    ]
+  },
+  "q006_valores_negativos": {
+    "quantidade": 10,
+    "campos": [
+      "VALOR_SERVICOS",
+      "VALOR"
+    ]
+  },
+  "q007_ativa_sem_receita": {
+    "quantidade": 26
+  },
+  "q008_sem_categoria": {
+    "quantidade": 17,
+    "matriculas": [
+      "1373866-6",
+      "1373974-3",
+      "1373976-0",
+      "1374033-4",
+      "1374040-7",
+      "1374212-4",
+      "1374229-9",
+      "1374608-1",
+      "1374609-0",
+      "1374610-3",
+      "1374645-6",
+      "1374646-4",
+      "1374647-2",
+      "1374648-0",
+      "1374649-9",
+      "1374650-2",
+      "1374651-0"
+    ]
+  },
+  "q009_data_invalida": {
+    "quantidade": 82
+  },
+  "q010_zero_economias": {
+    "quantidade": 6
+  },
   "metrics": {
     "outliers_extremos": 19,
     "sem_hidrometro": 1,

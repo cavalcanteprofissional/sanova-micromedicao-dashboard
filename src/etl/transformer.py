@@ -182,6 +182,81 @@ def enrich_with_calculated_fields(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def validate_faturamento(df: pd.DataFrame) -> pd.DataFrame:
+    val_cols = ['VALOR_AGUA', 'VALOR_ESGOTO', 'VALOR_SERVICOS', 'VALOR_IMPOSTOS', 'VALOR_DESCONTOS', 'VALOR_TOTAL']
+    if not all(c in df.columns for c in val_cols):
+        return df
+
+    df['VALOR_TOTAL_CALCULADO'] = (
+        df['VALOR_AGUA'].fillna(0) +
+        df['VALOR_ESGOTO'].fillna(0) +
+        df['VALOR_SERVICOS'].fillna(0) +
+        df['VALOR_IMPOSTOS'].fillna(0) -
+        df['VALOR_DESCONTOS'].fillna(0)
+    )
+    df['DIFERENCA_FATURAMENTO'] = abs(df['VALOR_TOTAL'].fillna(0) - df['VALOR_TOTAL_CALCULADO'])
+    df['FLAG_INCONSIST_FATURAMENTO'] = df['DIFERENCA_FATURAMENTO'] > 0.01
+
+    return df
+
+
+def validate_data_quality(df: pd.DataFrame) -> pd.DataFrame:
+    meses = [''] + [f'_{i:02d}' for i in range(1, 13)]
+
+    if 'VOLUME_FATURADO' in df.columns and 'VOLUME_REAL' in df.columns:
+        df['FLAG_FATURADO_MENOR_REAL'] = df['VOLUME_FATURADO'] < df['VOLUME_REAL']
+
+    volume_cols = ['VOLUME_LIDO', 'VOLUME_REAL', 'VOLUME_FATURADO']
+    valor_cols = ['VALOR_AGUA', 'VALOR_ESGOTO', 'VALOR_SERVICOS', 'VALOR_IMPOSTOS', 'VALOR_DESCONTOS', 'VALOR_TOTAL']
+
+    for col in volume_cols:
+        if col in df.columns:
+            df[f'FLAG_{col}_NEGATIVO'] = df[col] < 0
+
+    for col in valor_cols:
+        if col in df.columns:
+            df[f'FLAG_{col}_NEGATIVO'] = df[col] < 0
+
+    if all(f'FLAG_{col}_NEGATIVO' in df.columns for col in volume_cols):
+        df['FLAG_VOLUME_NEGATIVO'] = df[[f'FLAG_{c}_NEGATIVO' for c in volume_cols]].any(axis=1)
+
+    if all(f'FLAG_{col}_NEGATIVO' in df.columns for col in valor_cols):
+        df['FLAG_VALOR_NEGATIVO'] = df[[f'FLAG_{c}_NEGATIVO' for c in valor_cols]].any(axis=1)
+
+    df['FLAG_ATIVA_SEM_RECEITA'] = (
+        (df['SIT._LIG_AGUA'] == 'ATIVA') &
+        (df['VALOR_TOTAL'].fillna(0) == 0)
+    )
+
+    df['FLAG_SEM_CATEGORIA'] = df['CATEGORIA_PRINCIPAL'].isnull()
+
+    if 'DATA_INSTALACAO_HIDROMETRO_DT' in df.columns:
+        df['FLAG_DATA_INVALIDA'] = (
+            df['DATA_INSTALACAO_HIDROMETRO_DT'].isnull() |
+            (df['DATA_INSTALACAO_HIDROMETRO_DT'] > pd.Timestamp.today())
+        )
+    else:
+        df['FLAG_DATA_INVALIDA'] = False
+
+    econ_cols = ['NUMERO_ECONOMIAS_RES', 'NUMERO_ECONOMIAS_COM', 'NUMERO_ECONOMIAS_IND', 'NUMERO_ECONOMIAS_PUB']
+    if all(c in df.columns for c in econ_cols):
+        df['TOTAL_ECONOMIAS'] = (
+            df['NUMERO_ECONOMIAS_RES'].fillna(0) +
+            df['NUMERO_ECONOMIAS_COM'].fillna(0) +
+            df['NUMERO_ECONOMIAS_IND'].fillna(0) +
+            df['NUMERO_ECONOMIAS_PUB'].fillna(0)
+        )
+        df['FLAG_ZERO_ECONOMIAS'] = (
+            (df['SIT._LIG_AGUA'] == 'ATIVA') &
+            (df['TOTAL_ECONOMIAS'] == 0)
+        )
+
+    if 'VOLUME_REAL' in df.columns and 'VOLUME_LIDO' in df.columns:
+        df['FLAG_REAL_MAIOR_LIDO'] = df['VOLUME_REAL'] > df['VOLUME_LIDO']
+
+    return df
+
+
 def transform(df: pd.DataFrame) -> pd.DataFrame:
     df = normalize_text_columns(df)
     df = fix_capacidade_hidrometro(df)
@@ -191,4 +266,6 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
     df = handle_missing_economias(df)
     df = convert_numeric_monthly(df)
     df = enrich_with_calculated_fields(df)
+    df = validate_faturamento(df)
+    df = validate_data_quality(df)
     return df

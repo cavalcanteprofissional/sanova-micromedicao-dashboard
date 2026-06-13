@@ -1,0 +1,148 @@
+{
+  "kpis": {
+    "total_connections": 1912,
+    "active_connections": 1815,
+    "total_columns": 172,
+    "months_history": 13
+  },
+  "categories": {
+    "residencial": 1664,
+    "comercial": 143,
+    "industrial": 83,
+    "não informada": 17,
+    "publica": 5
+  },
+  "situations": {
+    "ativa": 1815,
+    "cancelada": 39,
+    "cortada_ramal": 20,
+    "cortada_cavalete": 9,
+    "suprimida": 6,
+    "cortada_na_fita": 6,
+    "eliminada": 2
+  },
+  "monthly_volume": [
+    4058646,
+    12077404,
+    4067816,
+    5088522,
+    5064672,
+    4980966,
+    5075463,
+    3091237,
+    8088270,
+    35027679,
+    3181188,
+    8187485,
+    9971296
+  ],
+  "monthly_billing": [
+    944427.34,
+    994703.54,
+    1062428.44,
+    934415.36,
+    919524.09,
+    1005418.15,
+    931212.19,
+    938430.95,
+    889237.94,
+    904658.71,
+    920220.3,
+    913180.99,
+    1171568.64
+  ],
+  "monthly_labels": [
+    "MÊS 01",
+    "MÊS 02",
+    "MÊS 03",
+    "MÊS 04",
+    "MÊS 05",
+    "MÊS 06",
+    "MÊS 07",
+    "MÊS 08",
+    "MÊS 09",
+    "MÊS 10",
+    "MÊS 11",
+    "MÊS 12",
+    "ATUAL"
+  ],
+  "flags": {
+    "anomalia_leitura": 11,
+    "ativa_sem_receita": 26,
+    "consumo_constante": 27,
+    "consumo_implausivel": 28,
+    "consumo_zero": 77,
+    "dados_incompletos": 176,
+    "data_invalida": 82,
+    "inconsist_faturamento": 1,
+    "outlier_extremo": 19,
+    "sem_categoria": 17,
+    "sem_hidrometro": 1,
+    "valor_negativo": 10,
+    "valor_servicos_negativo": 10,
+    "zero_economias": 6
+  },
+  "age_distribution": {
+    "0-1": 300,
+    "1-2": 155,
+    "2-3": 365,
+    "3-4": 312,
+    "4-5": 284,
+    "5-6": 206,
+    "6-7": 137,
+    "7-8": 27,
+    "8-9": 33,
+    "9-10": 11
+  },
+  "zero_consumption_by_category": {
+    "RESIDENCIAL": {
+      "total": 1664,
+      "zero": 70,
+      "near_zero": 283
+    },
+    "INDUSTRIAL": {
+      "total": 83,
+      "zero": 0,
+      "near_zero": 24
+    },
+    "COMERCIAL": {
+      "total": 143,
+      "zero": 14,
+      "near_zero": 45
+    },
+    "PUBLICA": {
+      "total": 5,
+      "zero": 0,
+      "near_zero": 2
+    },
+    "NÃO INFORMADA": {
+      "total": 17,
+      "zero": 0,
+      "near_zero": 0
+    }
+  },
+  "revenue": {
+    "total": 1171568.64,
+    "mean": 645.49,
+    "median": 242.3,
+    "std": 2031.88
+  },
+  "volume": {
+    "total": 9971296.0,
+    "mean": 5451.77,
+    "median": 17.0,
+    "std": 72976.01
+  },
+  "recovery_potential": {
+    "consumo_zero": 39762.18,
+    "ativas_sem_receita": 16782.74,
+    "dados_incompletos": 34081.87,
+    "outliers": 6132.15
+  },
+  "hydrometer_types": {
+    "unijato": 1348,
+    "unijato - pre equipado": 284,
+    "multijato": 136,
+    "ultrassonico": 62
+  }
+}

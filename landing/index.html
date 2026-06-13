@@ -175,6 +175,20 @@
             </div>
           </div>
         </div>
+        <div class="chart-row reveal" style="margin-top:24px">
+          <div class="chart-wrapper">
+            <canvas id="ageChart" width="500" height="250"
+                    role="img"
+                    aria-label="Histograma da idade dos hidrômetros: 300 com 0-1 ano, 155 com 1-2, 365 com 2-3, 312 com 3-4, 284 com 4-5, 206 com 5-6, 137 com 6-7, 27 com 7-8, 33 com 8-9, 11 com 9-10">
+            </canvas>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="zeroByCategoryChart" width="500" height="250"
+                    role="img"
+                    aria-label="Gráfico de barras agrupadas mostrando consumo zero por categoria">
+            </canvas>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -269,6 +283,20 @@
             <span class="insight-value">82</span>
             <span class="insight-label">Data de Instalação Inválida</span>
             <p class="insight-desc"><strong>Ação:</strong> 82 registros com data de instalação do hidrômetro inválida ou ausente — regularizar cadastro</p>
+          </div>
+        </div>
+        <div class="chart-row reveal" style="margin-top:32px">
+          <div class="chart-wrapper">
+            <canvas id="flagsChart" width="500" height="300"
+                    role="img"
+                    aria-label="Gráfico de barras horizontais mostrando a quantidade de cada tipo de anomalia">
+            </canvas>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="recoveryChart" width="500" height="300"
+                    role="img"
+                    aria-label="Gráfico de barras mostrando potencial de recuperação de receita por tipo de ação">
+            </canvas>
           </div>
         </div>
       </div>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SANOVA — Análise Comercial de Micromedição</title>
+  <link rel="icon" type="image/svg+xml" href="../src/dashboard/assets/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav id="navbar">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <svg viewBox="0 0 1080 1080" class="nav-logo" aria-hidden="true">
+          <path fill="#23a7e0" d="M160.54,411.11c4.82,1.16,9.89,1.16,14.71,0h1.34c33.48,4.06,63.6,16.94,86.71,43.18,19.79,22.46,33.03,51.74,33.09,81.58.04,17.42-12.71,29.32-29.53,29.65-25.39.51-59.73-16.01-82.52-28.62-25.83-14.29-76.68-38.09-105.3-38.77l-32.74-.77c18.79-51.47,60.81-79.78,111.57-86.25h2.67Z"/>
+          <path fill="#15547e" d="M347.71,554.24v-3.22c2.71-2.88,2.94-7.01,5.49-11.42,11.08,10.15,44.82,13.38,46.12-2.52,1.34-16.33-14.09-13.99-29.07-18-13.04-3.49-20.83-14.46-19.49-26.83,1.83-16.97,19.91-22.56,35.83-20.73,8.44.97,16.65,2.01,23.04,8.35-2.4,4.61-3.6,8.28-6.7,12.36-7.05-8.52-33.94-12.3-37.28.35-5.54,20.97,40.77,6.66,47.39,34.65,2.4,10.16,1.42,20.99-7.3,27.03-17.53,12.12-40.38,10.06-58.02-.02Z"/>
+          <path fill="#15547e" d="M654.18,561.07c-2.1,2.25-10.85,3.66-13.43.53l-44.4-53.88-.55,54.16c-4.53,1.43-8.22,1.35-12.64.65l.25-92.16,57.64,68.85.28-68.07c4.56-.36,8.26-.39,12.89.02l-.04,89.91Z"/>
+          <path fill="#15547f" d="M1022.03,554.66l-38.44.28c-2.17,1.37-2.57,5.23-4.08,7.45-4.75.6-8.98.66-14.56-.09l37.67-91.44,37.13,89.96c-4.51,2.66-9.3,2.31-14.11,1.51l-3.63-7.68ZM1017.86,542.28l-15.71-38.28-14.63,39.35c10.95-.64,20.42,1.42,30.34-1.06Z"/>
+          <path fill="#15547e" d="M516.83,555.02l-39.83-.71-3.66,7.97c-5.02.28-9.27.52-14.64-.14l37.89-91.02,37.22,89.81c-4.48,2.53-8.69,1.8-13.12,1.05-2.15-.18-2.31-5.73-3.86-6.95ZM481.42,542.88l30.77-.11-16-39.83c-3.22,7.05-2.84,13.3-7.36,18.55-1.45,7.61-5.29,13.44-7.4,21.39Z"/>
+          <path fill="#15547e" d="M902.31,472.68c1.63-3.81,10.54-1.58,14.76-.34l-37.78,90.88-36.94-91.06c4.38-2.15,9.32-1.31,14.53-.16l22.42,54.32,23.01-53.65Z"/>
+          <path fill="#23a7e0" d="M778.57,523.81c1.88-17.65-4.83-31.86-20.1-37.08-14.43-4.93-30.44.83-37.53,16-5.21.33-9.63-1.5-15.46-1.72,7.03-19.61,27.01-32.12,47.46-29.93,34.67,3.72,46.98,42.91,38.43,52.51-2.26,2.54-12.51,3.95-12.81.22Z"/>
+          <path fill="#15547e" d="M776.4,530.73c5.6.91,9.74,1.74,15.3,1.57-5.73,16.26-19.61,26.92-34.68,29.78-17.55,3.33-34.27-2.87-44.92-16.86-4.97-6.53-14.59-27.74-6.45-35.06,3.03-2.72,6.68-2.79,13.03-1.79-5.66,18.44,7.26,38.79,27.89,40.98,12.84,1.36,23.73-6.93,29.83-18.62Z"/>
+        </svg>
+        <span>SANOVA</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#contexto">Contexto</a></li>
+        <li><a href="#categorias">Categorias</a></li>
+        <li><a href="#consumo">Consumo</a></li>
+        <li><a href="#insights">Insights</a></li>
+        <li><a href="#cta">Contato</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <section id="hero" class="section hero">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <div class="hero-badge">Estudo de Micromedição</div>
+        <h1 class="hero-title">Análise Comercial<br>de <span class="gradient-text">Saneamento</span></h1>
+        <p class="hero-subtitle">
+          Diagnóstico técnico e estratégico do sistema comercial de uma concessionária<br>
+          <strong>1.912 ligações</strong> analisadas ao longo de <strong>13 meses</strong> de histórico
+        </p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <span class="hero-stat-value" data-count="1912">0</span>
+            <span class="hero-stat-label">Ligações</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-value" data-count="13">0</span>
+            <span class="hero-stat-label">Meses de Histórico</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-value" data-count="172">0</span>
+            <span class="hero-stat-label">Colunas Analisadas</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-value-prefix">R$</span>
+            <span class="hero-stat-value" data-count="1171569">0</span>
+            <span class="hero-stat-label">Faturamento Total</span>
+          </div>
+        </div>
+        <a href="#contexto" class="scroll-indicator">
+          <span>Rolar para explorar</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <section id="contexto" class="section context-section">
+      <div class="section-inner">
+        <div class="reveal">
+          <span class="section-number">01</span>
+          <h2 class="section-title">Contexto</h2>
+          <p class="section-desc">
+            Este projeto analisa dados comerciais de uma concessionária de saneamento para identificar
+            oportunidades de <strong>recuperação de receita</strong> e <strong>perdas comerciais</strong>.
+          </p>
+        </div>
+        <div class="context-grid reveal">
+          <div class="context-card">
+            <div class="context-card-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4eb9e6" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <h3>Micromedição</h3>
+            <p>Análise de padrões de consumo por categoria: Residencial, Comercial, Industrial e Pública</p>
+          </div>
+          <div class="context-card">
+            <div class="context-card-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3>Anomalias & Fraudes</h3>
+            <p>Detecção de divergências entre volume lido e real, com 144 casos identificados</p>
+          </div>
+          <div class="context-card">
+            <div class="context-card-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <h3>Recuperação de Receita</h3>
+            <p>Priorização de ações corretivas com base em potencial financeiro e gravidade</p>
+          </div>
+          <div class="context-card">
+            <div class="context-card-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <h3>Hidrômetros</h3>
+            <p>Avaliação do parque de hidrômetros por tipo, marca, idade e prioridade de substituição</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="categorias" class="section categories-section">
+      <div class="section-inner">
+        <div class="reveal">
+          <span class="section-number">02</span>
+          <h2 class="section-title">Distribuição por Categoria</h2>
+          <p class="section-desc">
+            A base é majoritariamente <strong>Residencial</strong> (87%), seguida por Comercial (7,5%),
+            Industrial (4,3%) e Pública (0,2%).
+          </p>
+        </div>
+        <div class="chart-grid reveal">
+          <div class="chart-wrapper">
+            <canvas id="categoryChart" width="400" height="400"></canvas>
+          </div>
+          <div class="category-list">
+            <div class="category-item">
+              <span class="category-dot" style="--dot-color: #4eb9e6"></span>
+              <span class="category-name">Residencial</span>
+              <span class="category-count">1.664</span>
+              <span class="category-pct">87,0%</span>
+            </div>
+            <div class="category-item">
+              <span class="category-dot" style="--dot-color: #f39c12"></span>
+              <span class="category-name">Comercial</span>
+              <span class="category-count">143</span>
+              <span class="category-pct">7,5%</span>
+            </div>
+            <div class="category-item">
+              <span class="category-dot" style="--dot-color: #e74c3c"></span>
+              <span class="category-name">Industrial</span>
+              <span class="category-count">83</span>
+              <span class="category-pct">4,3%</span>
+            </div>
+            <div class="category-item">
+              <span class="category-dot" style="--dot-color: #2ecc71"></span>
+              <span class="category-name">Pública</span>
+              <span class="category-count">5</span>
+              <span class="category-pct">0,2%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="consumo" class="section consumption-section">
+      <div class="section-inner">
+        <div class="reveal">
+          <span class="section-number">03</span>
+          <h2 class="section-title">Consumo & Faturamento</h2>
+          <p class="section-desc">
+            Volume total medido ultrapassa <strong>9,97 milhões de m³</strong>, com faturamento
+            de <strong>R$ 1,17 milhão</strong> no período.
+          </p>
+        </div>
+        <div class="metrics-grid reveal">
+          <div class="metric-card metric-primary">
+            <span class="metric-label">Volume Total Medido</span>
+            <span class="metric-value">9.971.296 <small>m³</small></span>
+            <span class="metric-trend">Equivalente a ~3.989 piscinas olímpicas</span>
+          </div>
+          <div class="metric-card metric-accent">
+            <span class="metric-label">Volume Médio por Ligação</span>
+            <span class="metric-value">5.452 <small>m³</small></span>
+            <span class="metric-trend">Média do período de 13 meses</span>
+          </div>
+          <div class="metric-card metric-highlight">
+            <span class="metric-label">Faturamento Total</span>
+            <span class="metric-value">R$ 1.171.569</span>
+            <span class="metric-trend">Média de R$ 645 por ligação</span>
+          </div>
+        </div>
+        <div class="chart-row reveal">
+          <div class="chart-wrapper chart-half">
+            <canvas id="volumeChart" width="500" height="250"></canvas>
+          </div>
+          <div class="chart-wrapper chart-half">
+            <canvas id="billingChart" width="500" height="250"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="insights" class="section insights-section">
+      <div class="section-inner">
+        <div class="reveal">
+          <span class="section-number">04</span>
+          <h2 class="section-title">Insights & Oportunidades</h2>
+          <p class="section-desc">
+            A análise revelou oportunidades significativas de recuperação de receita
+            e melhoria operacional.
+          </p>
+        </div>
+        <div class="insights-grid reveal">
+          <div class="insight-card insight-critical">
+            <div class="insight-header">
+              <span class="insight-icon">!</span>
+              <span class="insight-tag">Crítico</span>
+            </div>
+            <span class="insight-value">144</span>
+            <span class="insight-label">Divergências LIDO &gt; REAL</span>
+            <p class="insight-desc">Possíveis fraudes ou erros de leitura que impactam diretamente o faturamento</p>
+          </div>
+          <div class="insight-card insight-warning">
+            <div class="insight-header">
+              <span class="insight-icon">!</span>
+              <span class="insight-tag">Alerta</span>
+            </div>
+            <span class="insight-value">15</span>
+            <span class="insight-label">Outliers Extremos</span>
+            <p class="insight-desc">Registros com volume &gt; 900.000 m³ sinalizados para auditoria</p>
+          </div>
+          <div class="insight-card insight-info">
+            <div class="insight-header">
+              <span class="insight-icon">i</span>
+              <span class="insight-tag">Cadastro</span>
+            </div>
+            <span class="insight-value">82</span>
+            <span class="insight-label">Registros sem Hidrômetro</span>
+            <p class="insight-desc">Ligações ativas sem dados cadastrais de hidrômetro (4,3% da base)</p>
+          </div>
+          <div class="insight-card insight-success">
+            <div class="insight-header">
+              <span class="insight-icon">R$</span>
+              <span class="insight-tag">Receita</span>
+            </div>
+            <span class="insight-value">R$ 1,17M</span>
+            <span class="insight-label">Faturamento Total</span>
+            <p class="insight-desc">Potencial de recuperação estimado em ações corretivas priorizadas</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cta" class="section cta-section">
+      <div class="section-inner">
+        <div class="cta-content reveal">
+          <span class="section-number">05</span>
+          <h2 class="section-title">Explore o Dashboard Completo</h2>
+          <p class="section-desc">
+            Acesse o dashboard interativo com 6 abas analíticas, filtros dinâmicos,
+            chatbot IA e muito mais.
+          </p>
+          <div class="cta-features">
+            <div class="cta-feature">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Visão Geral com KPIs executivos
+            </div>
+            <div class="cta-feature">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Detecção de Anomalias & Fraudes
+            </div>
+            <div class="cta-feature">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Análise de Consumo Zero
+            </div>
+            <div class="cta-feature">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Chatbot IA em linguagem natural
+            </div>
+          </div>
+          <a href="https://github.com" target="_blank" class="cta-button">
+            <span>Acessar Dashboard</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <p class="cta-credit">
+            Desenvolvido por <a href="https://cavalcanteprofissional.github.io/portfolio/" target="_blank">Lucas Cavalcante</a>
+            &middot; SANOVA &mdash; Soluções para Gestão da Água
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <span>&copy; 2024 SANOVA — Análise Comercial de Micromedição</span>
+      <span>Feito com dados reais do setor de saneamento</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="scripts.js"></script>
+</body>
+</html>

@@ -1844,3 +1844,75 @@ Executar o dashboard e verificar se o chatbot responde com contexto melhorado:
 ```bash
 python src/dashboard/main.py
 ```
+
+---
+
+## 17. Landing Page "Reimagined" (Branch `reimagined`)
+
+### 17.1 Objetivo
+
+Criar uma landing page estática (HTML/CSS/JS) com narrativa visual dos dados, seguindo o framework Data Storytelling, para deploy no GitHub Pages em vez do Streamlit.
+
+### 17.2 Skill Instalada
+
+| Skill | Localização | Descrição |
+|-------|-------------|-----------|
+| Data Storytelling (MCP #505) | `.claude/skills/data-storytelling/SKILL.md` | Framework narrativo para apresentação de dados: Setup → Conflito → Resolução |
+
+### 17.3 Estrutura da Landing Page
+
+```
+landing/
+├── index.html      # Página principal: hero + 5 blocos de scroll
+├── styles.css      # Estilos dark mode, responsivo, animações
+└── scripts.js      # Chart.js (CDN), Intersection Observer, counters
+```
+
+### 17.4 Secções da Página
+
+| Bloco | Secção | Framing (Data Storytelling) |
+|-------|--------|-----------------------------|
+| 1 | **Hero** — "1.912 ligações analisadas" | Hook |
+| 2 | **Contexto** — O projeto, objetivo, 4 pilares | Context |
+| 3 | **Categorias** — Pizza Chart: Residencial (87%), Comercial (7,5%), Industrial (4,3%), Pública | Data Point |
+| 4 | **Consumo & Faturamento** — ~9,97M m³, R$ 1,17M, gráficos de linha/barra | Data Point |
+| 5 | **Insights** — 144 anomalias, 15 outliers, 82 sem hidrômetro | Climax |
+| 6 | **CTA** — Call-to-action para dashboard completo | Resolution |
+
+### 17.5 Dados Apresentados
+
+| Métrica | Valor |
+|---------|-------|
+| Total de ligações | 1.912 |
+| Meses de histórico | 13 |
+| Colunas analisadas | 172 |
+| Volume total medido | 9.971.296 m³ |
+| Volume médio por ligação | 5.452 m³ |
+| Faturamento total | R$ 1.171.569 |
+| Categorias | Residencial (1.664), Comercial (143), Industrial (83), Pública (5) |
+| Divergências LIDO > REAL | 144 |
+| Outliers extremos (>900k m³) | 15 |
+| Registros sem hidrômetro | 82 (4,3%) |
+
+### 17.6 Tech Stack
+
+- **HTML/CSS/JS puro** — Zero dependências de build
+- **Chart.js 4.4.1 (CDN)** — Gráficos doughnut, linha e barra
+- **Intersection Observer API** — Scroll reveal e animação de contadores
+- **GitHub Pages** — Deploy estático gratuito
+
+### 17.7 Deploy
+
+1. Push branch `reimagined` para o GitHub
+2. Settings → Pages → Source: `Deploy from a branch`
+3. Branch: `reimagined`, folder: `/landing`
+4. URL: `https://<user>.github.io/dashboard-sanova/`
+
+### 17.8 Checklist
+
+- [x] Criar branch `reimagined`
+- [x] Instalar MCP Skill Data Storytelling (`.claude/skills/data-storytelling/SKILL.md`)
+- [x] Criar `landing/index.html` (hero + 5 blocos scroll)
+- [x] Criar `landing/styles.css` (dark mode, responsivo, animações)
+- [x] Criar `landing/scripts.js` (Chart.js, scroll reveal, counters animados)
+- [ ] Fazer push da branch e configurar GitHub Pages

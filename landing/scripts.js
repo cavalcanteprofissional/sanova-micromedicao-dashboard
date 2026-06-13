@@ -80,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
   function renderCharts() {
+    if (typeof Chart === 'undefined') { renderChartFallback(); return; }
+
     const C = {
       primary: '#2980B9', warning: '#F39C12', danger: '#E74C3C',
       success: '#27AE60', info: '#3498DB',
@@ -376,6 +378,18 @@ document.addEventListener('DOMContentLoaded', () => {
         },
       });
     }
+  }
+
+  /* ---- Chart.js Fallback (HTML tables) ---- */
+  function renderChartFallback() {
+    document.querySelectorAll('.chart-preview').forEach((container) => {
+      const fallback = container.querySelector('canvas');
+      if (!fallback) return;
+      const table = document.createElement('div');
+      table.className = 'chart-fallback';
+      table.innerHTML = '<p style="color:#f39c12;font-size:0.85rem;">\u26A0\uFE0F Gr&aacute;fico n&atilde;o dispon&iacute;vel. Ative JavaScript ou use um navegador moderno.</p>';
+      container.appendChild(table);
+    });
   }
 
   /* ---- Navbar scroll effect (debounced) ---- */

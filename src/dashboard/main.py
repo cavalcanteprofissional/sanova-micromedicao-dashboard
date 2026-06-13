@@ -20,6 +20,8 @@ LOGO_SVG = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVV
 def render_header():
     st.html('''
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { font-family: 'Inter', sans-serif; }
         :root {
             --cor-agua: #2980B9;
             --cor-ativo: #1ABC9C;
@@ -59,7 +61,7 @@ def render_header():
             border-left: 4px solid var(--cor-agua);
             padding: 16px 20px;
             background: var(--bg-kpi);
-            border-radius: 8px;
+            border-radius: 12px;
             color: var(--texto-principal);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -132,7 +134,7 @@ def render_header():
         }
         .sidebar-section {
             background: var(--bg-sidebar-section);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 12px;
             margin-bottom: 12px;
             border: 1px solid var(--borda);
@@ -224,13 +226,16 @@ def render_header():
     document.head.appendChild(link);
     </script>
     ''')
-    st.markdown("""
-    <div style="padding:16px 0 12px 0;">
-        <p style="font-size:2.6rem;font-weight:800;color:#2980B9;margin:0;padding:0;line-height:1.1;font-family:inherit;">Análise Comercial de Micromedição</p>
-        <p style="font-size:1.15rem;color:#9BA0A6;margin:0;font-weight:400;font-family:inherit;margin-top:4px;">SANOVA – Soluções para Gestão da Água</p>
-        <p style="font-size:0.85rem;color:#9BA0A6;margin:0;font-weight:400;font-family:inherit;margin-top:12px;">
-            Desenvolvido por <a href="https://cavalcanteprofissional.github.io/portfolio/" target="_blank" style="color:#2980B9;text-decoration:underline;">Lucas Cavalcante</a>
-        </p>
+    st.markdown(f"""
+    <div class="page-header">
+        <img class="page-header-img" src="{LOGO_SVG}" alt="SANOVA">
+        <div class="page-header-text">
+            <p class="page-headline">Análise Comercial de Micromedição</p>
+            <p class="page-subtitle">SANOVA – Soluções para Gestão da Água</p>
+            <p style="font-size:0.85rem;color:#9BA0A6;margin:6px 0 0 0;font-weight:400;">
+                Desenvolvido por <a href="https://cavalcanteprofissional.github.io/portfolio/" target="_blank" style="color:#2980B9;text-decoration:underline;">Lucas Cavalcante</a>
+            </p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 

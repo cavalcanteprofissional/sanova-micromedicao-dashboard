@@ -44,7 +44,7 @@ def render_card_container(title: str, content_func):
     <div style="
         background: #1E1E1E;
         border: 1px solid #3A3A4A;
-        border-radius: 8px;
+        border-radius: 12px;
         padding: 16px;
         margin-bottom: 16px;
     ">

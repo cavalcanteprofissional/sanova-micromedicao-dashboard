@@ -73,10 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
     .then((data) => {
       d = data;
       renderCharts();
+      markEmptyWrappers();
     })
     .catch((err) => {
       console.warn('data.json not loaded, using defaults:', err);
       renderCharts();
+      markEmptyWrappers();
     });
 
   function renderCharts() {
@@ -402,6 +404,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
     }
+  }
+
+  /* ---- Mark empty chart wrappers ---- */
+  function markEmptyWrappers() {
+    const dependentIds = ['ageChart', 'zeroByCategoryChart', 'flagsChart', 'recoveryChart'];
+    dependentIds.forEach((id) => {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      const wrapper = canvas.closest('.chart-wrapper');
+      if (!wrapper) return;
+      if (!d || canvas.getContext('2d').getImageData(1, 1, 1, 1).data[3] === 0) {
+        wrapper.classList.add('empty');
+      }
+    });
   }
 
   /* ---- Chart.js Fallback (HTML tables) ---- */

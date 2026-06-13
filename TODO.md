@@ -1916,3 +1916,119 @@ landing/
 - [x] Criar `landing/styles.css` (dark mode, responsivo, animações)
 - [x] Criar `landing/scripts.js` (Chart.js, scroll reveal, counters animados)
 - [ ] Fazer push da branch e configurar GitHub Pages
+
+---
+
+## 18. Plano de Melhorias — Landing Page "Reimagined"
+
+### 18.1 Diagnóstico
+
+#### Problemas de Dados
+| # | Problema | Detalhe |
+|---|----------|---------|
+| 1 | Métricas incompletas | Faltam: 1.815 ativas (95%), 77 consumo zero, 19 outliers, 176 dados incompletos, 26 ativas sem receita, 27 consumo constante, 28 consumo implausível |
+| 2 | Mediana ignorada | Média de R$ 645 skewed por outliers; mediana R$ 242 é mais representativa |
+| 3 | Flags mal descritas | "144 divergências LIDO>REAL" genérico — na verdade há 11 flags distintas |
+| 4 | Dados hardcoded no JS | Arrays fixos em scripts.js — se CSV mudar, landing fica obsoleta |
+| 5 | Sem data de referência | Números aparecem sem "Data de referência: Jan/2024 a Jan/2025" |
+
+#### Problemas de UI/UX
+| # | Problema | Severidade |
+|---|----------|------------|
+| 1 | Brand inconsistente: landing `#4eb9e6` vs dashboard `#2980B9` | 🔴 Crítico |
+| 2 | Sem menu mobile: nav links somem sem hamburger | 🔴 Crítico |
+| 3 | Narrativa sem gancho: hero não explica "por que se importar" | 🔴 Crítico |
+| 4 | Acessibilidade zero: canvas sem aria-label, contadores sem aria-live, sem skip-link, sem prefers-reduced-motion | 🔴 Crítico |
+| 5 | Section `min-height: 100vh` causa scroll fatigue | 🟡 Médio |
+| 6 | Single breakpoint 768px — tablets landscape sofrem | 🟡 Médio |
+| 7 | Chart.js sem fallback se CDN falhar | 🟡 Médio |
+| 8 | CTA link placeholder (`https://github.com`) | 🟡 Médio |
+| 9 | Scroll handler sem debounce causa layout thrashing | 🟡 Médio |
+| 10 | Sem meta tags OG/Twitter para partilha | 🟡 Médio |
+
+### 18.2 Plano por Fases
+
+#### Fase 1 — Narrativa + Brand + Acessibilidade (Prioritário)
+
+| Tarefa | Descrição |
+|--------|-----------|
+| 1.1 | Reescrever arco narrativo: Hero com gancho ("R$ 1,17M sob risco"), problema → sinais → impacto → solução |
+| 1.2 | Unificar paleta: landing usar `#2980B9` (cor do dashboard) como primary |
+| 1.3 | Adicionar hamburger menu mobile |
+| 1.4 | Adicionar aria-label nos canvases com texto alternativo |
+| 1.5 | Adicionar `aria-live="polite"` nos contadores + respeitar `prefers-reduced-motion` |
+| 1.6 | Adicionar skip-to-content link |
+| 1.7 | Adicionar `font-display=swap` no Google Fonts |
+| 1.8 | Adicionar meta tags (description, OG, Twitter) |
+| 1.9 | Adicionar data de referência nos números |
+| 1.10 | Corrigir CTA link para URL real |
+
+#### Fase 2 — Riqueza de Dados & Visualizações
+
+| Tarefa | Descrição |
+|--------|-----------|
+| 2.1 | Criar script Python que exporta `landing/data.json` a partir do CSV |
+| 2.2 | Substituir dados hardcoded do JS por fetch + data.json |
+| 2.3 | Adicionar waterfall chart de receita (receita bruta → deduções → recuperável) |
+| 2.4 | Adicionar bar chart de flags por severidade (11 tipos) |
+| 2.5 | Adicionar histograma de idade dos hidrômetros |
+| 2.6 | Adicionar grouped bar de consumo zero por categoria |
+| 2.7 | Transformar insight cards em prioridades numeradas com ação + impacto financeiro |
+
+#### Fase 3 — UI/UX Refinamento
+
+| Tarefa | Descrição |
+|--------|-----------|
+| 3.1 | Remover `min-height: 100vh` das secções (exceto hero) |
+| 3.2 | Adicionar breakpoint tablet a 1024px |
+| 3.3 | Hero stats: `grid 2x2` em mobile pequeno (480px) |
+| 3.4 | Debounce scroll handler com requestAnimationFrame |
+| 3.5 | Adicionar `will-change` nos reveal elements |
+| 3.6 | Chart.js fallback: tabela HTML estática se CDN falhar |
+| 3.7 | Adicionar integrity hash no CDN Chart.js |
+| 3.8 | Adicionar logo SVG no header do dashboard Streamlit |
+| 3.9 | Importar Inter font no dashboard Streamlit |
+| 3.10 | Padronizar border-radius para 12px em ambos |
+
+#### Fase 4 — Avançado (Opcional)
+
+| Tarefa | Descrição |
+|--------|-----------|
+| 4.1 | Scroll-driven chart animations (gráficos constroem ponto-a-ponto ao scrollar) |
+| 4.2 | Substituir Chart.js por Observable Plot (waterfall + heatmap nativos) |
+
+### 18.3 Progresso
+
+- [x] **Fase 1** — Narrativa + Brand + Acessibilidade
+  - [x] 1.1 Reescrever arco narrativo
+  - [x] 1.2 Unificar paleta (#2980B9)
+  - [x] 1.3 Hamburger menu mobile
+  - [x] 1.4 aria-label nos canvases
+  - [x] 1.5 aria-live contadores + prefers-reduced-motion
+  - [x] 1.6 Skip-to-content link
+  - [x] 1.7 font-display=swap (já existia)
+  - [x] 1.8 Meta tags OG/Twitter
+  - [x] 1.9 Data de referência
+  - [x] 1.10 CTA link real
+- [ ] **Fase 2** — Dados & Visualizações
+  - [ ] 2.1 Script data.json
+  - [ ] 2.2 Substituir dados hardcoded
+  - [ ] 2.3 Waterfall chart
+  - [ ] 2.4 Bar chart flags
+  - [ ] 2.5 Histograma idade hidrômetros
+  - [ ] 2.6 Grouped bar consumo zero
+  - [ ] 2.7 Insights com prioridade
+- [ ] **Fase 3** — UI/UX Refinamento
+  - [ ] 3.1 Remover 100vh (exceto hero)
+  - [ ] 3.2 Breakpoint 1024px
+  - [ ] 3.3 Hero stats 2x2
+  - [ ] 3.4 Debounce scroll
+  - [ ] 3.5 will-change reveal
+  - [ ] 3.6 Chart.js fallback
+  - [ ] 3.7 integrity CDN
+  - [ ] 3.8 Logo no dashboard
+  - [ ] 3.9 Inter font no dashboard
+  - [ ] 3.10 border-radius 12px
+- [ ] **Fase 4** — Avançado
+  - [ ] 4.1 Scroll-driven animations
+  - [ ] 4.2 Observable Plot

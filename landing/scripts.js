@@ -1,5 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- Hamburger Menu ---- */
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+
+  if (navToggle && navLinks) {
+    navToggle.addEventListener('click', () => {
+      const open = navLinks.classList.toggle('open');
+      navToggle.classList.toggle('active');
+      navToggle.setAttribute('aria-expanded', open);
+    });
+
+    navLinks.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        navToggle.classList.remove('active');
+        navToggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+
   /* ---- Scroll Reveal ---- */
   const revealElements = document.querySelectorAll('.reveal');
 
@@ -20,6 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function animateCounter(el) {
     const target = parseInt(el.dataset.count, 10);
     if (isNaN(target)) return;
+
+    if (prefersReducedMotion) {
+      el.textContent = target.toLocaleString('pt-BR');
+      return;
+    }
 
     const duration = 2000;
     const start = performance.now();
@@ -62,11 +89,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ---- Charts ---- */
+  const chartColors = {
+    primary: '#2980B9',
+    warning: '#F39C12',
+    danger: '#E74C3C',
+    success: '#27AE60',
+    cardBg: '#1a1f2e',
+    text: '#94a3b8',
+    border: '#1e293b',
+    title: '#f1f3f5',
+  };
 
   const categoryData = {
     labels: ['Residencial', 'Comercial', 'Industrial', 'Pública'],
     values: [1664, 143, 83, 5],
-    colors: ['#4eb9e6', '#f39c12', '#e74c3c', '#2ecc71'],
+    colors: [chartColors.primary, chartColors.warning, chartColors.danger, chartColors.success],
   };
 
   const categoryCtx = document.getElementById('categoryChart');
@@ -78,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
         datasets: [{
           data: categoryData.values,
           backgroundColor: categoryData.colors,
-          borderColor: '#1a1f2e',
+          borderColor: chartColors.cardBg,
           borderWidth: 3,
           hoverOffset: 8,
         }],
@@ -89,10 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#1a1f2e',
-            titleColor: '#f1f3f5',
-            bodyColor: '#94a3b8',
-            borderColor: '#1e293b',
+            backgroundColor: chartColors.cardBg,
+            titleColor: chartColors.title,
+            bodyColor: chartColors.text,
+            borderColor: chartColors.border,
             borderWidth: 1,
             padding: 12,
             cornerRadius: 8,
@@ -110,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* Volume chart (simulated monthly data for illustration) */
+  /* Volume chart */
   const volumeCtx = document.getElementById('volumeChart');
   if (volumeCtx) {
     const monthlyVolumes = [785000, 802000, 798000, 815000, 790000, 810000, 825000, 808000, 795000, 820000, 805000, 830000, 812000];
@@ -123,12 +160,12 @@ document.addEventListener('DOMContentLoaded', () => {
         datasets: [{
           label: 'Volume (m³)',
           data: monthlyVolumes,
-          borderColor: '#4eb9e6',
-          backgroundColor: 'rgba(78, 185, 230, 0.08)',
+          borderColor: chartColors.primary,
+          backgroundColor: 'rgba(41, 128, 185, 0.08)',
           fill: true,
           tension: 0.3,
-          pointBackgroundColor: '#4eb9e6',
-          pointBorderColor: '#1a1f2e',
+          pointBackgroundColor: chartColors.primary,
+          pointBorderColor: chartColors.cardBg,
           pointBorderWidth: 2,
           pointRadius: 3,
           borderWidth: 2,
@@ -140,10 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#1a1f2e',
-            titleColor: '#f1f3f5',
-            bodyColor: '#94a3b8',
-            borderColor: '#1e293b',
+            backgroundColor: chartColors.cardBg,
+            titleColor: chartColors.title,
+            bodyColor: chartColors.text,
+            borderColor: chartColors.border,
             borderWidth: 1,
             padding: 12,
             cornerRadius: 8,
@@ -183,8 +220,8 @@ document.addEventListener('DOMContentLoaded', () => {
         datasets: [{
           label: 'Faturamento (R$)',
           data: monthlyBilling,
-          backgroundColor: 'rgba(46, 204, 113, 0.6)',
-          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(39, 174, 96, 0.6)',
+          borderColor: chartColors.success,
           borderWidth: 1,
           borderRadius: 4,
         }],
@@ -195,10 +232,10 @@ document.addEventListener('DOMContentLoaded', () => {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: '#1a1f2e',
-            titleColor: '#f1f3f5',
-            bodyColor: '#94a3b8',
-            borderColor: '#1e293b',
+            backgroundColor: chartColors.cardBg,
+            titleColor: chartColors.title,
+            bodyColor: chartColors.text,
+            borderColor: chartColors.border,
             borderWidth: 1,
             padding: 12,
             cornerRadius: 8,
@@ -225,18 +262,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ---- Navbar scroll effect ---- */
+  /* ---- Navbar scroll effect (debounced) ---- */
   const navbar = document.getElementById('navbar');
-  let lastScroll = 0;
+  let ticking = false;
 
   window.addEventListener('scroll', () => {
-    const current = window.scrollY;
-    if (current > 100) {
-      navbar.style.background = 'rgba(10, 14, 23, 0.95)';
-    } else {
-      navbar.style.background = 'rgba(10, 14, 23, 0.8)';
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        navbar.classList.toggle('navbar-scrolled', window.scrollY > 100);
+        ticking = false;
+      });
+      ticking = true;
     }
-    lastScroll = current;
-  });
+  }, { passive: true });
 
 });

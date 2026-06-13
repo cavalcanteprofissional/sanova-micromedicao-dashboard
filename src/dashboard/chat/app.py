@@ -19,7 +19,7 @@ def render(df: pd.DataFrame):
         .chat-title {
             font-size: 1.1rem !important;
             font-weight: 600 !important;
-            color: #2980B9 !important;
+            color: #1976D2 !important;
             margin-bottom: 4px !important;
         }
     </style>

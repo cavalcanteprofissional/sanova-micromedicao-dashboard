@@ -42,12 +42,12 @@ def section_title(title: str, tooltip: str = None):
 def render_card_container(title: str, content_func):
     st.markdown(f"""
     <div style="
-        background: #1E1E1E;
-        border: 1px solid #3A3A4A;
+        background: #121D33;
+        border: 1px solid #1E2A40;
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 16px;
     ">
-        <h4 style="color: #E0E0E0; margin: 0 0 12px 0; font-size: 1rem;">{title}</h4>
+        <h4 style="color: #EEF2F6; margin: 0 0 12px 0; font-size: 1rem;">{title}</h4>
     </div>
     """, unsafe_allow_html=True)

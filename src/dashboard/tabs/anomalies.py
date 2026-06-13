@@ -52,14 +52,14 @@ def render(df):
         max_val = scatter_df['VOLUME_LIDO'].max() * 1.1 if scatter_df['VOLUME_LIDO'].max() > 0 else 100
         fig_scatter.add_shape(
             type='line', x0=0, y0=0, x1=max_val, y1=max_val,
-            line=dict(color='#E74C3C', dash='dash', width=2),
+            line=dict(color='#D32F2F', dash='dash', width=2),
             name='LIDO = REAL'
         )
         
         fig_scatter.update_layout(
             height=350,
             coloraxis_colorbar=dict(title="Divergência"),
-            font=dict(color='#E0E0E0')
+            font=dict(color='#EEF2F6')
         )
         st.plotly_chart(fig_scatter, width='stretch')
         if zoom:
@@ -87,10 +87,10 @@ def render(df):
         tipo_df = tipo_df.sort_values('Qtd', ascending=False)
         
         cores_barra = {
-            'Anomalia de Leitura (LIDO > REAL)': '#E74C3C',
-            'Sem Hidrômetro (Ativa)': '#E74C3C',
-            'Outlier Extremo': '#F39C12',
-            'Consumo Implausível': '#E74C3C'
+            'Anomalia de Leitura (LIDO > REAL)': '#D32F2F',
+            'Sem Hidrômetro (Ativa)': '#D32F2F',
+            'Outlier Extremo': '#FFA000',
+            'Consumo Implausível': '#D32F2F'
         }
         cores = [cores_barra.get(t, '#95A5A6') for t in tipo_df['Tipo']]
 
@@ -105,7 +105,7 @@ def render(df):
             showlegend=False,
             height=350,
             xaxis=dict(title=""),
-            font=dict(color='#E0E0E0')
+            font=dict(color='#EEF2F6')
         )
         st.plotly_chart(fig_bar, width='stretch')
 
@@ -126,9 +126,9 @@ def render(df):
         if pd.isna(score):
             return ''
         if score >= 100:
-            return 'background-color: #2D1F1F; color: #E74C3C'
+            return 'background-color: #2D1F1F; color: #D32F2F'
         elif score >= 50:
-            return 'background-color: #2D2A1A; color: #F39C12'
+            return 'background-color: #2D2A1A; color: #FFA000'
         else:
             return ''
     

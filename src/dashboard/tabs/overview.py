@@ -46,7 +46,7 @@ def render(df, qm=None):
         cat_counts = df['CATEGORIA_PRINCIPAL'].value_counts().reset_index()
         cat_counts.columns = ['Categoria', 'Quantidade']
         cat_counts = cat_counts.sort_values('Quantidade', ascending=False)
-        cores_cat = ['#2980B9', '#1ABC9C', '#95A5A6', '#F39C12'][:len(cat_counts)]
+        cores_cat = ['#1976D2', '#00BFA5', '#95A5A6', '#FFA000'][:len(cat_counts)]
         fig_pie = px.pie(
             cat_counts, values='Quantidade', names='Categoria',
             hole=0.45, template=get_plotly_template(),
@@ -60,7 +60,7 @@ def render(df, qm=None):
         fig_pie.update_layout(
             legend=dict(orientation='h', yanchor='bottom', y=-0.15, xanchor='center', x=0.5),
             margin=dict(t=20, b=30),
-            font=dict(color='#E0E0E0')
+            font=dict(color='#EEF2F6')
         )
         st.plotly_chart(fig_pie, width='stretch')
 
@@ -71,14 +71,14 @@ def render(df, qm=None):
         situacao_counts.columns = ['Situacao', 'Quantidade']
 
         cor_situacao = {
-            'ATIVA': '#1ABC9C',
+            'ATIVA': '#00BFA5',
             'CANCELADA': '#95A5A6',
-            'CORTADA RAMAL': '#E74C3C',
-            'CORTADA CAVALETE': '#E74C3C',
-            'CORTADA NA FITA': '#E74C3C',
+            'CORTADA RAMAL': '#D32F2F',
+            'CORTADA CAVALETE': '#D32F2F',
+            'CORTADA NA FITA': '#D32F2F',
             'SUPRIMIDA': '#7F8C8D',
             'ELIMINADA': '#7F8C8D',
-            'NAO INFORMADA': '#F39C12',
+            'NAO INFORMADA': '#FFA000',
         }
         bar_colors = [cor_situacao.get(s, '#95A5A6') for s in situacao_counts['Situacao']]
 
@@ -95,7 +95,7 @@ def render(df, qm=None):
             yaxis={'autorange': 'reversed'},
             margin=dict(t=20),
             xaxis=dict(gridcolor='rgba(255,255,255,0.1)'),
-            font=dict(color='#E0E0E0')
+            font=dict(color='#EEF2F6')
         )
         st.plotly_chart(fig_bar, width='stretch')
 
@@ -114,13 +114,13 @@ def render(df, qm=None):
     fig_line = px.area(
         fat_df, x='Mes', y='Faturamento',
         template=get_plotly_template(),
-        color_discrete_sequence=['#2980B9']
+        color_discrete_sequence=['#1976D2']
     )
     fig_line.add_traces(go.Scatter(
         x=fat_df['Mes'], y=fat_df['Faturamento'],
         mode='lines+markers',
-        line=dict(color='#1ABC9C', width=2, dash='dot'),
-        marker=dict(size=6, color='#1ABC9C'),
+        line=dict(color='#00BFA5', width=2, dash='dot'),
+        marker=dict(size=6, color='#00BFA5'),
         name='Tendência'
     ))
     fig_line.update_layout(
@@ -166,6 +166,6 @@ def render(df, qm=None):
         height=300,
         template=get_plotly_template(),
         margin=dict(t=20),
-        font=dict(color='#E0E0E0')
+        font=dict(color='#EEF2F6')
     )
     st.plotly_chart(fig_heat, width='stretch')

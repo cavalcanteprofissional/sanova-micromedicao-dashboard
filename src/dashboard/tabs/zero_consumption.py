@@ -67,7 +67,7 @@ def render(df):
             showlegend=False,
             height=350,
             coloraxis_colorbar=dict(title="% com Zero", tickformat='.0f'),
-            font=dict(color='#E0E0E0')
+            font=dict(color='#EEF2F6')
         )
         st.plotly_chart(fig_cat, width='stretch')
 
@@ -89,9 +89,9 @@ def render(df):
     
     def colorize_zero(meses):
         if meses >= 12:
-            return 'background-color: #2D1F1F; color: #E74C3C'
+            return 'background-color: #2D1F1F; color: #D32F2F'
         elif meses >= 6:
-            return 'background-color: #2D2A1A; color: #F39C12'
+            return 'background-color: #2D2A1A; color: #FFA000'
         else:
             return ''
     

@@ -7,10 +7,10 @@ from dashboard.utils import format_currency, get_plotly_template
 
 def _color_priority(val):
     if val == 'Alta':
-        return 'background-color: #2D1F1F; color: #E74C3C'
+        return 'background-color: #2D1F1F; color: #D32F2F'
     if val == 'Media':
-        return 'background-color: #2D2A1A; color: #F39C12'
-    return 'background-color: #1A2D1F; color: #27AE60'
+        return 'background-color: #2D2A1A; color: #FFA000'
+    return 'background-color: #1A2D1F; color: #00BFA5'
 
 
 def render(df):

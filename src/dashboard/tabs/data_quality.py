@@ -197,7 +197,7 @@ def render(df, qm=None):
 
         def colorize_q(qtd):
             if qtd > 0:
-                return 'background-color: #2D1F1F; color: #E74C3C'
+                return 'background-color: #2D1F1F; color: #D32F2F'
             return ''
 
         styled_inc = inc_df.style.map(colorize_q, subset=['Qtd'])
@@ -266,9 +266,9 @@ def render(df, qm=None):
     
     def colorize_missing(pct):
         if pct > 20:
-            return 'background-color: #2D1F1F; color: #E74C3C'
+            return 'background-color: #2D1F1F; color: #D32F2F'
         elif pct > 5:
-            return 'background-color: #2D2A1A; color: #F39C12'
+            return 'background-color: #2D2A1A; color: #FFA000'
         else:
             return ''
     

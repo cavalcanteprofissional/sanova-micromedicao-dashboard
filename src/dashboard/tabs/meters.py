@@ -98,9 +98,9 @@ def render(df):
     
     def colorize_idade(idade):
         if idade >= 8:
-            return 'background-color: #2D1F1F; color: #E74C3C'
+            return 'background-color: #2D1F1F; color: #D32F2F'
         elif idade >= 5:
-            return 'background-color: #2D2A1A; color: #F39C12'
+            return 'background-color: #2D2A1A; color: #FFA000'
         else:
             return ''
     

@@ -2032,3 +2032,38 @@ landing/
 - [ ] **Fase 4** — Avançado
   - [ ] 4.1 Scroll-driven animations
   - [ ] 4.2 Observable Plot
+
+---
+
+## 15. Landing Page — Correções e Melhorias (13/06/2026)
+
+### 15.1 Bugs Identificados
+
+| # | Problema | Causa | Impacto | Prioridade |
+|---|----------|-------|---------|------------|
+| BU-1 | Card vazio ao lado de "Anomalias por Tipo" | Chart wrapper visível mesmo sem dados renderizados | UX quebrada — card fantasma | Alta |
+| BU-2 | Textos e títulos desalinhados entre sections | CSS inconsistente entre chart-wrappers e section-desc | Aparência amadora | Média |
+
+### 15.2 Nova Seção Desenvolvedor
+
+Substituir section `#cta` (05 — "Explore o Dashboard Completo") por seção pessoal com:
+
+| Elemento | Fonte |
+|----------|-------|
+| Foto de perfil | `public/images/profile/foto-perfil.png` do portfólio |
+| Nome | Lucas Cavalcante |
+| Tagline | Data Analyst & AI |
+| Assinatura | Texto estilizado (cursiva via CSS) |
+| CTA principal | Link para `https://cavalcanteprofissional.github.io/portfolio/` |
+| Redes | Email, WhatsApp, LinkedIn |
+| CTA secundário | Link para o dashboard SANOVA |
+
+### 15.3 Tarefas
+
+| # | Tarefa | Status |
+|---|--------|--------|
+| T1 | Adicionar fallback visual nos chart-wrappers vazios | Pendente |
+| T2 | Rebalancear padding/altura dos chart-wrappers para consistência | Pendente |
+| T3 | Substituir section #cta por seção do desenvolvedor | Pendente |
+| T4 | Testar visualmente no mobile e tablet | Pendente |
+| T5 | Commit e push | Pendente |

@@ -32,15 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ---- Counter Animation ---- */
   function animateCounter(el, target) {
-    if (prefersReducedMotion) { el.textContent = target.toLocaleString('pt-BR'); return; }
+    const prefix = el.dataset.prefix || '';
+    if (prefersReducedMotion) { el.textContent = prefix + target.toLocaleString('pt-BR'); return; }
     const duration = 2000, start = performance.now();
     function update(now) {
       const progress = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       const current = Math.floor(eased * target);
-      el.textContent = target >= 1000 ? current.toLocaleString('pt-BR') : current;
+      el.textContent = (target >= 1000 ? prefix + current.toLocaleString('pt-BR') : prefix + current);
       if (progress < 1) requestAnimationFrame(update);
-      else el.textContent = target.toLocaleString('pt-BR');
+      else el.textContent = prefix + target.toLocaleString('pt-BR');
     }
     requestAnimationFrame(update);
   }
@@ -85,9 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof Chart === 'undefined') { renderChartFallback(); return; }
 
     const C = {
-      primary: '#2980B9', warning: '#F39C12', danger: '#E74C3C',
-      success: '#27AE60', info: '#3498DB',
-      cardBg: '#1a1f2e', text: '#94a3b8', border: '#1e293b', title: '#f1f3f5',
+      primary: '#1976D2', warning: '#FFA000', danger: '#D32F2F',
+      success: '#00BFA5', info: '#00ACC1',
+      cardBg: '#121D33', text: '#94a3b8', border: '#1E2A40', title: '#EEF2F6',
     };
 
     const cats = d ? d.categories : { residencial: 1664, comercial: 143, industrial: 83, publica: 5 };
@@ -137,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
           datasets: [{
             label: 'Hidrômetros',
             data: values,
-            backgroundColor: values.map((v, i) => i >= 5 ? 'rgba(231, 76, 60, 0.7)' : 'rgba(41, 128, 185, 0.7)'),
+            backgroundColor: values.map((v, i) => i >= 5 ? 'rgba(211, 47, 47, 0.7)' : 'rgba(25, 118, 210, 0.7)'),
             borderColor: values.map((v, i) => i >= 5 ? C.danger : C.primary),
             borderWidth: 1,
             borderRadius: 3,
@@ -155,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
           },
           scales: {
             x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
-            y: { grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 } } },
+            y: { grid: { color: 'rgba(30, 42, 64, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 } } },
           },
         },
       });
@@ -174,8 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
         data: {
           labels: zLabels,
           datasets: [
-            { label: 'Consumo Zero (%)', data: zeroVals, backgroundColor: 'rgba(231, 76, 60, 0.7)', borderColor: C.danger, borderWidth: 1, borderRadius: 3 },
-            { label: 'Quase Zero (%)', data: nearZeroVals, backgroundColor: 'rgba(243, 156, 18, 0.6)', borderColor: C.warning, borderWidth: 1, borderRadius: 3 },
+            { label: 'Consumo Zero (%)', data: zeroVals, backgroundColor: 'rgba(211, 47, 47, 0.7)', borderColor: C.danger, borderWidth: 1, borderRadius: 3 },
+            { label: 'Quase Zero (%)', data: nearZeroVals, backgroundColor: 'rgba(255, 160, 0, 0.6)', borderColor: C.warning, borderWidth: 1, borderRadius: 3 },
           ],
         },
         options: {
@@ -191,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
           },
           scales: {
             x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
-            y: { grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, maxTicksLimit: 6 } },
+            y: { grid: { color: 'rgba(30, 42, 64, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, maxTicksLimit: 6 } },
           },
         },
       });
@@ -210,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             label: 'Volume (m³)',
             data: volData,
             borderColor: C.primary,
-            backgroundColor: 'rgba(41, 128, 185, 0.08)',
+            backgroundColor: 'rgba(25, 118, 210, 0.08)',
             fill: true, tension: 0.3,
             pointBackgroundColor: C.primary,
             pointBorderColor: C.cardBg,
@@ -229,8 +230,8 @@ document.addEventListener('DOMContentLoaded', () => {
             },
           },
           scales: {
-            x: { grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 } } },
-            y: { grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => `${(v / 1000).toFixed(0)}k` } },
+            x: { grid: { color: 'rgba(30, 42, 64, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 } } },
+            y: { grid: { color: 'rgba(30, 42, 64, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => `${(v / 1000).toFixed(0)}k` } },
           },
         },
       });
@@ -248,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
           datasets: [{
             label: 'Faturamento (R$)',
             data: billData,
-            backgroundColor: 'rgba(39, 174, 96, 0.6)',
+            backgroundColor: 'rgba(0, 191, 165, 0.6)',
             borderColor: C.success,
             borderWidth: 1, borderRadius: 4,
           }],
@@ -266,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
           },
           scales: {
             x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
-            y: { grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => `R$${(v / 1000).toFixed(0)}k` } },
+            y: { grid: { color: 'rgba(30, 42, 64, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => `R$${(v / 1000).toFixed(0)}k` } },
           },
         },
       });
@@ -327,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
           },
           scales: {
-            x: { grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 } } },
+            x: { grid: { color: 'rgba(30, 42, 64, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 } } },
             y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11 } } },
           },
         },
@@ -397,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
               tooltip: { backgroundColor: C.cardBg, titleColor: C.title, bodyColor: C.text, borderColor: C.border, borderWidth: 1, padding: 12, cornerRadius: 8, callbacks: { label: (ctx) => `R$ ${ctx.parsed.y.toLocaleString('pt-BR')}` } },
             },
             scales: {
-              x: { grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => `R$${(v).toFixed(0)}` } },
+              x: { grid: { color: 'rgba(30, 42, 64, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => `R$${(v).toFixed(0)}` } },
               y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11 } } },
             },
           },
@@ -427,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!fallback) return;
       const table = document.createElement('div');
       table.className = 'chart-fallback';
-      table.innerHTML = '<p style="color:#f39c12;font-size:0.85rem;">\u26A0\uFE0F Gr&aacute;fico n&atilde;o dispon&iacute;vel. Ative JavaScript ou use um navegador moderno.</p>';
+      table.innerHTML = '<p style="color:#ffa000;font-size:0.85rem;">\u26A0\uFE0F Gr&aacute;fico n&atilde;o dispon&iacute;vel. Ative JavaScript ou use um navegador moderno.</p>';
       container.appendChild(table);
     });
   }

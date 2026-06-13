@@ -336,47 +336,71 @@ document.addEventListener('DOMContentLoaded', () => {
     const recCtx = document.getElementById('recoveryChart');
     if (recCtx && d) {
       const rec = d.recovery_potential;
-      const recLabels = {
-        'consumo_zero': 'Consumo Zero',
-        'dados_incompletos': 'Dados Incompletos',
-        'ativas_sem_receita': 'Ativas sem Receita',
-        'outliers': 'Outliers',
-      };
-      const labels = Object.keys(recLabels);
-      const values = labels.map((k) => rec[k] || 0);
-      const recColors = [C.danger, C.warning, C.info, C.warning];
+      const recData = [
+        { label: 'Consumo Zero',  value: rec.consumo_zero || 0 },
+        { label: 'Dados Incompletos', value: rec.dados_incompletos || 0 },
+        { label: 'Ativas s/ Receita', value: rec.ativas_sem_receita || 0 },
+        { label: 'Outliers',  value: rec.outliers || 0 },
+      ];
+      const recColors = [C.danger, C.info, C.warning, C.warning];
 
-      new Chart(recCtx, {
-        type: 'bar',
-        data: {
-          labels: labels.map((k) => recLabels[k]),
-          datasets: [{
-            label: 'Potencial (R$)',
-            data: values,
-            backgroundColor: recColors.map((c) => c + '99'),
-            borderColor: recColors,
-            borderWidth: 1,
-            borderRadius: 3,
-          }],
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true, maintainAspectRatio: true,
-          plugins: {
-            legend: { display: false },
-            title: { display: true, text: 'Potencial de Recuperação (R$)', color: C.title, font: { size: 13, weight: '600' }, padding: { bottom: 12 } },
-            tooltip: {
-              backgroundColor: C.cardBg, titleColor: C.title, bodyColor: C.text,
-              borderColor: C.border, borderWidth: 1, padding: 12, cornerRadius: 8,
-              callbacks: { label: (ctx) => `R$ ${ctx.parsed.y.toLocaleString('pt-BR')}` },
+      if (typeof Plot !== 'undefined') {
+        recCtx.parentNode.style.position = 'relative';
+        const plotDiv = document.createElement('div');
+        plotDiv.style.cssText = 'width:100%;height:260px;';
+        recCtx.parentNode.insertBefore(plotDiv, recCtx);
+        recCtx.style.display = 'none';
+        const p = Plot.plot({
+          marks: [
+            Plot.barX(recData, {
+              x: 'value', y: 'label',
+              fill: (d, i) => recColors[i],
+              sort: { y: 'x', reverse: true },
+            }),
+            Plot.text(recData, {
+              x: 'value', y: 'label',
+              text: (d) => `R$ ${d.value.toLocaleString('pt-BR')}`,
+              textAnchor: 'start', dx: 4,
+              fill: '#94a3b8', fontSize: 11,
+            }),
+          ],
+          x: { axis: null, grid: true, tickFormat: '' },
+          y: { label: null },
+          color: { legend: false },
+          marginLeft: 120,
+          marginRight: 100,
+          height: 220,
+          style: { background: 'transparent', color: '#94a3b8', fontSize: 12, fontFamily: 'Inter, sans-serif' },
+        });
+        plotDiv.appendChild(p);
+      } else {
+        new Chart(recCtx, {
+          type: 'bar',
+          data: {
+            labels: recData.map((d) => d.label),
+            datasets: [{
+              label: 'Potencial (R$)',
+              data: recData.map((d) => d.value),
+              backgroundColor: recColors.map((c) => c + '99'),
+              borderColor: recColors,
+              borderWidth: 1, borderRadius: 3,
+            }],
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: true,
+            plugins: {
+              legend: { display: false },
+              title: { display: true, text: 'Potencial de Recuperação (R$)', color: C.title, font: { size: 13, weight: '600' }, padding: { bottom: 12 } },
+              tooltip: { backgroundColor: C.cardBg, titleColor: C.title, bodyColor: C.text, borderColor: C.border, borderWidth: 1, padding: 12, cornerRadius: 8, callbacks: { label: (ctx) => `R$ ${ctx.parsed.y.toLocaleString('pt-BR')}` } },
+            },
+            scales: {
+              x: { grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => `R$${(v).toFixed(0)}` } },
+              y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11 } } },
             },
           },
-          scales: {
-            x: { grid: { color: 'rgba(30, 41, 59, 0.5)', drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v) => `R$${(v).toFixed(0)}` } },
-            y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11 } } },
-          },
-        },
-      });
+        });
+      }
     }
   }
 

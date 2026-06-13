@@ -413,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dependentIds.forEach((id) => {
       const canvas = document.getElementById(id);
       if (!canvas) return;
+      if (canvas.style.display === 'none') return;
       const wrapper = canvas.closest('.chart-wrapper');
       if (!wrapper) return;
       if (!d || canvas.getContext('2d').getImageData(1, 1, 1, 1).data[3] === 0) {

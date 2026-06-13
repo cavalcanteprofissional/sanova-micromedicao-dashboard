@@ -201,9 +201,21 @@ body {
   color: var(--text-primary);
 }
 
+.nav-logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-logo-link:hover {
+  transform: scale(1.08);
+}
+
 .nav-logo {
-  width: 32px;
-  height: 32px;
+  height: 36px;
+  width: auto;
+  display: block;
 }
 
 .nav-links {

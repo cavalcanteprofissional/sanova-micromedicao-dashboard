@@ -446,3 +446,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, { passive: true });
 });
+
+/* ---- Logo click: smooth scroll to hero ---- */
+document.querySelector('.nav-logo-link')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  const hero = document.getElementById('hero');
+  if (hero) {
+    hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});

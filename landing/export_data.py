@@ -32,7 +32,18 @@ monthly_val_cols = sorted([c for c in df.columns if re.match(r'VALOR_TOTAL_\d+$'
 monthly_billing = [safe_sum(df[c]) for c in monthly_val_cols]
 monthly_billing.append(safe_sum(df['VALOR_TOTAL']))
 
-monthly_labels = [f'MÊS {i+1:02d}' for i in range(12)] + ['ATUAL']
+from datetime import date
+_MESES_PT = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
+             7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'}
+_REF = date(2026, 5, 1)  # mês atual (ATUAL)
+monthly_labels = []
+for i in range(12):
+    y, m = _REF.year, _REF.month - 12 + i
+    while m < 1:
+        m += 12
+        y -= 1
+    monthly_labels.append(f'{_MESES_PT[m]}/{y}')
+monthly_labels.append(f'{_MESES_PT[_REF.month]}/{_REF.year}')
 
 flag_data = {}
 for c in sorted(df.columns):

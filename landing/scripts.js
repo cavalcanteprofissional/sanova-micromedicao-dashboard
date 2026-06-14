@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const volCtx = document.getElementById('volumeChart');
     if (volCtx) {
       const volData = d ? d.monthly_volume : [785000, 802000, 798000, 815000, 790000, 810000, 825000, 808000, 795000, 820000, 805000, 830000, 812000];
-      const labels = d ? d.monthly_labels : ['Mês 1', 'Mês 2', 'Mês 3', 'Mês 4', 'Mês 5', 'Mês 6', 'Mês 7', 'Mês 8', 'Mês 9', 'Mês 10', 'Mês 11', 'Mês 12', 'Atual'];
+      const labels = d ? d.monthly_labels : ['Mai/2025', 'Jun/2025', 'Jul/2025', 'Ago/2025', 'Set/2025', 'Out/2025', 'Nov/2025', 'Dez/2025', 'Jan/2026', 'Fev/2026', 'Mar/2026', 'Abr/2026', 'Mai/2026'];
       new Chart(volCtx, {
         type: 'line',
         data: {
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const billCtx = document.getElementById('billingChart');
     if (billCtx) {
       const billData = d ? d.monthly_billing : [92500, 94800, 93500, 96200, 93800, 95500, 97100, 95200, 94100, 96800, 95000, 97800, 96100];
-      const labels = d ? d.monthly_labels : ['Mês 1', 'Mês 2', 'Mês 3', 'Mês 4', 'Mês 5', 'Mês 6', 'Mês 7', 'Mês 8', 'Mês 9', 'Mês 10', 'Mês 11', 'Mês 12', 'Atual'];
+      const labels = d ? d.monthly_labels : ['Mai/2025', 'Jun/2025', 'Jul/2025', 'Ago/2025', 'Set/2025', 'Out/2025', 'Nov/2025', 'Dez/2025', 'Jan/2026', 'Fev/2026', 'Mar/2026', 'Abr/2026', 'Mai/2026'];
       new Chart(billCtx, {
         type: 'bar',
         data: {
